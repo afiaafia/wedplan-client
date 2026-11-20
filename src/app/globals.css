@@ -1,26 +1,124 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fffeFC;
+  --foreground: #30272a;
+
+  --primary: #75434b;
+  --primary-hover: #60353d;
+
+  --secondary: #f4edea;
+  --accent: #b78c82;
+  --champagne: #b89570;
+
+  --muted: #756b67;
+  --border: #e9e1dc;
+  --card: #ffffff;
+
+  --success: #687c70;
+  --error: #b84c55;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-champagne: var(--champagne);
+
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-card: var(--card);
+
+  --color-success: var(--success);
+  --color-error: var(--error);
+
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-playfair);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-dm-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #e9d9d6;
+  color: #75434b;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* WedPlan Dark Theme */
+.dark {
+  --background: #171416;
+  --foreground: #f7f0ed;
+  --primary: #d4a6a0;
+  --primary-hover: #e3b9b0;
+  --secondary: #292225;
+  --accent: #c49a91;
+  --champagne: #c5a47e;
+  --muted: #b5a6a2;
+  --border: #403438;
+  --card: #211c1f;
+  --success: #8ca995;
+  --error: #e18b91;
+  color-scheme: dark;
+}
+
+.dark body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+
+/* Theme color scheme and transitions */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  transition:
+    background-color 300ms ease,
+    color 300ms ease;
 }
