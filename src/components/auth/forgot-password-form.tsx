@@ -25,7 +25,7 @@ export default function ForgotPasswordForm() {
 
       const result = await authClient.requestPasswordReset({
         email: email.trim(),
-        redirectTo: new URL("/vendor/sign-in", base).toString(),
+        redirectTo: new URL("/reset-password", base).toString(),
       });
 
       if (result.error) {
@@ -113,11 +113,11 @@ export default function ForgotPasswordForm() {
         </form>
 
         <Link
-          href="/vendor/sign-in"
+          href="/sign-in"
           className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
         >
           <ArrowLeft size={16} />
-          Back to Vendor Sign In
+          Back to Sign In
         </Link>
       </div>
     </main>

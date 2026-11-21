@@ -84,6 +84,10 @@ export async function requireSession(redirectTo?: string): Promise<SessionData> 
     redirect(`/sign-in${query}`);
   }
 
+  if (session.user.isBlocked === true) {
+    redirect("/blocked");
+  }
+
   return session;
 }
 

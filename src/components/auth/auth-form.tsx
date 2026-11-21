@@ -8,12 +8,22 @@ import {
   Eye,
   EyeOff,
   Heart,
+  Image as ImageIcon,
+  LoaderCircle,
   LockKeyhole,
   Mail,
   UserRound,
-  LoaderCircle,
 } from "lucide-react";
 import { getSession, signIn, signOut, signUp } from "@/lib/auth-client";
+import { authErrorMessage, authQueryErrorMessage } from "@/lib/auth-errors";
+import { useToast } from "@/components/layout/toast-provider";
+import { uploadProfileImage } from "@/lib/profile-api";
+import { validateSignUpPassword } from "@/lib/password";
+import { getSafeRedirectPath } from "@/lib/redirect-path";
+import {
+  isAllowedPostAuthDestination,
+  isAllowedPostAuthRedirect,
+} from "@/lib/route-access";
 import {
   DEFAULT_ROLE,
   getRoleDashboard,
@@ -31,12 +41,6 @@ function getFrontendUrl(path: string = "/"): string {
       : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return new URL(path, base).toString();
 }
-
-const AUTH_ERROR_MESSAGES: Record<string, string> = {
-  not_vendor:
-    "This account is not registered as a vendor. Please use Customer Sign In.",
-  session_missing: "We could not verify your session. Please try again.",
-};
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -75,6 +79,7 @@ type AuthFormProps = {
 export default function AuthForm({ mode, audience = "customer" }: AuthFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const isSignUp = mode === "sign-up";
   const isVendorSignIn = !isSignUp && audience === "vendor";
   const allowedRoles: readonly UserRole[] | null = isVendorSignIn
@@ -89,27 +94,22 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [roleMismatch, setRoleMismatch] = useState(false);
 
   const errorParam = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
-  const error =
-    formError ||
-    (errorParam
-      ? AUTH_ERROR_MESSAGES[errorParam] ||
-        errorDescription ||
-        `Authentication error: ${errorParam}`
-      : "");
+  const error = formError || authQueryErrorMessage(errorParam, errorDescription);
   const showRoleMismatch = roleMismatch || errorParam === "not_vendor";
 
-  async function redirectAfterAuth(fallbackRole?: RegistrationRole) {
+  async function redirectAfterAuth() {
     const result = await getSession();
     const sessionRole = result.data?.user?.role;
     const normalizedRole = normalizeRole(sessionRole);
-    const resolvedRole = sessionRole ?? fallbackRole;
 
     if (allowedRoles && !allowedRoles.includes(normalizedRole)) {
       await signOut();
@@ -122,27 +122,73 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
       return;
     }
 
-    router.replace(resolvedRole ? getRoleDashboard(resolvedRole) : "/dashboard");
+    const requestedPath = getSafeRedirectPath(
+      searchParams.get("redirect"),
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000"
+    );
+    const target =
+      requestedPath && isAllowedPostAuthRedirect(requestedPath, normalizedRole)
+        ? requestedPath
+        : getRoleDashboard(normalizedRole);
+
+    showToast({
+      title: isSignUp ? "Account created" : "Signed in",
+      description: `Welcome${result.data?.user?.name ? `, ${result.data.user.name}` : ""}.`,
+      variant: "success",
+    });
+
+    router.replace(target);
     router.refresh();
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
+    setFieldErrors({});
     setRoleMismatch(false);
+
+    const errors: Record<string, string> = {};
+    const trimmedName = name.trim();
+
+    if (!isRegistrationRole(role) && isSignUp) {
+      errors.role = "Please choose Customer or Vendor.";
+    }
+    if (isSignUp && trimmedName.length < 2) {
+      errors.name = "Please enter your full name.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = "Please enter a valid email address.";
+    }
+    const passwordError = isSignUp
+      ? validateSignUpPassword(password)
+      : password.length === 0
+        ? "Please enter your password."
+        : null;
+    if (passwordError) errors.password = passwordError;
+    if (profileImage && !profileImage.type.startsWith("image/")) {
+      errors.image = "Choose an image file.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      showToast({
+        title: "Check your details",
+        description: "Please fix the highlighted fields and try again.",
+        variant: "error",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const callbackURL = getFrontendUrl("/dashboard");
 
       if (isSignUp) {
-        if (!isRegistrationRole(role)) {
-          setFormError("Please choose an account type.");
-          return;
-        }
-
         const payload = {
-          name: name.trim(),
+          name: trimmedName,
           email: email.trim(),
           password,
           callbackURL,
@@ -154,11 +200,28 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
         const result = await signUp.email(payload);
 
         if (result.error) {
-          setFormError(result.error.message || "Account creation failed.");
+          const message = authErrorMessage(result.error);
+          setFormError(message);
+          showToast({ title: "Sign up failed", description: message, variant: "error" });
           return;
         }
 
-        await redirectAfterAuth(role);
+        if (profileImage) {
+          try {
+            await uploadProfileImage(profileImage);
+          } catch (uploadError) {
+            showToast({
+              title: "Profile image not uploaded",
+              description:
+                uploadError instanceof Error
+                  ? uploadError.message
+                  : "Your account was created, but the image could not be uploaded.",
+              variant: "error",
+            });
+          }
+        }
+
+        await redirectAfterAuth();
       } else {
         const result = await signIn.email({
           email: email.trim(),
@@ -168,18 +231,19 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
         });
 
         if (result.error) {
-          setFormError(result.error.message || "Authentication failed.");
+          const message = authErrorMessage(result.error);
+          setFormError(message);
+          showToast({ title: "Sign in failed", description: message, variant: "error" });
           return;
         }
 
         await redirectAfterAuth();
       }
     } catch (err) {
-      setFormError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
+      const message =
+        err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setFormError(message);
+      showToast({ title: "Authentication failed", description: message, variant: "error" });
     } finally {
       setLoading(false);
     }
@@ -191,23 +255,37 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
     setGoogleLoading(true);
 
     try {
+      const requestedPath = getSafeRedirectPath(
+        searchParams.get("redirect"),
+        typeof window !== "undefined"
+          ? window.location.origin
+          : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      );
+      const destination =
+        requestedPath && isAllowedPostAuthDestination(requestedPath)
+          ? requestedPath
+          : null;
+      const callbackPath = isVendorSignIn
+        ? `/vendor/auth/callback${destination ? `?redirect=${encodeURIComponent(destination)}` : ""}`
+        : destination ?? getRoleDashboard("customer");
       const result = await signIn.social({
         provider: "google",
-        callbackURL: getFrontendUrl(
-          isVendorSignIn ? "/vendor/auth/callback" : "/dashboard"
-        ),
+        callbackURL: getFrontendUrl(callbackPath),
         errorCallbackURL: getFrontendUrl(
           isVendorSignIn ? "/vendor/sign-in" : isSignUp ? "/sign-up" : "/sign-in"
         ),
       });
 
       if (result?.error) {
-        setFormError(result.error.message || "Google authentication failed.");
+        const message = authErrorMessage(result.error);
+        setFormError(message);
+        showToast({ title: "Google sign-in failed", description: message, variant: "error" });
       }
     } catch (err) {
-      setFormError(
-        err instanceof Error ? err.message : "Google authentication failed."
-      );
+      const message =
+        err instanceof Error ? err.message : "Google authentication failed.";
+      setFormError(message);
+      showToast({ title: "Google sign-in failed", description: message, variant: "error" });
     } finally {
       setGoogleLoading(false);
     }
@@ -310,6 +388,11 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
               )}
               Continue with Google
             </button>
+            {isSignUp && (
+              <p className="mt-2 text-center text-[11px] text-muted">
+                Google accounts are created with the Customer role.
+              </p>
+            )}
 
             <div className="my-7 flex items-center gap-4">
               <div className="h-px flex-1 bg-border" />
@@ -356,6 +439,9 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
                       );
                     })}
                   </div>
+                  {fieldErrors.role && (
+                    <p className="mt-2 text-xs text-error">{fieldErrors.role}</p>
+                  )}
                 </fieldset>
               )}
 
@@ -379,6 +465,30 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
                       className="h-12 w-full rounded-xl border border-border bg-background pl-11 pr-4 text-sm text-foreground outline-none transition-all placeholder:text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10"
                     />
                   </div>
+                  {fieldErrors.name && (
+                    <p className="mt-2 text-xs text-error">{fieldErrors.name}</p>
+                  )}
+                </div>
+              )}
+
+              {isSignUp && (
+                <div>
+                  <label htmlFor="profileImage" className="mb-2 block text-sm font-semibold text-foreground">
+                    Profile image <span className="font-normal text-muted">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
+                    <input
+                      id="profileImage"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setProfileImage(e.target.files?.[0] || null)}
+                      className="h-12 w-full rounded-xl border border-border bg-background pl-11 pr-4 text-xs text-foreground outline-none transition-all file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    />
+                  </div>
+                  {fieldErrors.image && (
+                    <p className="mt-2 text-xs text-error">{fieldErrors.image}</p>
+                  )}
                 </div>
               )}
 
@@ -399,6 +509,9 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
                     className="h-12 w-full rounded-xl border border-border bg-background pl-11 pr-4 text-sm text-foreground outline-none transition-all placeholder:text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10"
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p className="mt-2 text-xs text-error">{fieldErrors.email}</p>
+                )}
               </div>
 
               <div>
@@ -415,7 +528,7 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={8}
+                    minLength={isSignUp ? 6 : 1}
                     maxLength={128}
                     className="h-12 w-full rounded-xl border border-border bg-background pl-11 pr-12 text-sm text-foreground outline-none transition-all placeholder:text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10"
                   />
@@ -428,12 +541,15 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {isSignUp && (
+                {fieldErrors.password && (
+                  <p className="mt-2 text-xs text-error">{fieldErrors.password}</p>
+                )}
+                {isSignUp && !fieldErrors.password && (
                   <p className="mt-2 text-xs text-muted">
-                    Use at least 8 characters.
+                    Use at least 6 characters with one uppercase and one lowercase letter.
                   </p>
                 )}
-                {isVendorSignIn && (
+                {!isSignUp && (
                   <div className="mt-2 flex justify-end">
                     <Link
                       href="/forgot-password"
