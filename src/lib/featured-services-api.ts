@@ -205,6 +205,16 @@ export async function getFeaturedServices(
   return parseFeaturedServicesResponse(body, response.status);
 }
 
+export function firstAvailableImage(
+  images: string[],
+  failedImages: readonly string[] = []
+): string | undefined {
+  return images.find(
+    (image) =>
+      typeof image === "string" && image.trim().length > 0 && !failedImages.includes(image)
+  );
+}
+
 export function featuredServiceHref(id: string): string {
   return `/services/${encodeURIComponent(id)}`;
 }

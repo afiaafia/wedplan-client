@@ -4,6 +4,7 @@ import {
   FEATURED_SERVICES_LIMIT,
   FeaturedServicesApiError,
   featuredServiceHref,
+  firstAvailableImage,
   getFeaturedServices,
   hasFeaturedServices,
   parseFeaturedServicesResponse,
@@ -193,6 +194,18 @@ test("network, HTTP, and invalid response failures throw user-facing errors", as
     assert.equal(error.message, "The server returned an invalid response.");
     return true;
   });
+});
+
+test("a broken cover image falls back to the next stored image URL", () => {
+  const images = [
+    "https://images.example.com/broken.jpg",
+    "",
+    "https://images.example.com/valid.jpg",
+  ];
+
+  assert.equal(firstAvailableImage(images), images[0]);
+  assert.equal(firstAvailableImage(images, [images[0]]), images[2]);
+  assert.equal(firstAvailableImage(images, [images[0], images[2]]), undefined);
 });
 
 test("service cards link to the existing service details route", () => {

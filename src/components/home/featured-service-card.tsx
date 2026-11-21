@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight, ImageOff, MapPin } from "lucide-react";
 import {
   featuredServiceHref,
+  firstAvailableImage,
   type FeaturedService,
 } from "@/lib/featured-services-api";
 import { formatPrice } from "@/lib/services-api";
@@ -15,10 +16,10 @@ export default function FeaturedServiceCard({
 }: {
   service: FeaturedService;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [failedImages, setFailedImages] = useState<string[]>([]);
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const image = service.images[0];
-  const showImage = Boolean(image) && !imageFailed;
+  const image = firstAvailableImage(service.images, failedImages);
+  const showImage = Boolean(image);
   const vendorName =
     service.vendor?.name?.trim() || service.vendor?.businessName?.trim() || "";
   const showAvatar = Boolean(service.vendor?.profileImage) && !avatarFailed;
@@ -32,7 +33,13 @@ export default function FeaturedServiceCard({
             src={image}
             alt={service.title || "Wedding service"}
             loading="lazy"
-            onError={() => setImageFailed(true)}
+            onError={() => {
+              if (image) {
+                setFailedImages((current) =>
+                  current.includes(image) ? current : [...current, image]
+                );
+              }
+            }}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
