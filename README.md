@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WedPlan Client
 
-## Getting Started
+WedPlan is a wedding planning marketplace where couples discover and book wedding providers, vendors manage listings and booking requests, and administrators moderate the platform. This repository contains the Next.js frontend deployed on Vercel.
 
-First, run the development server:
+- **Live website:** https://wedplan-client-ten.vercel.app
+- **Frontend repository:** https://github.com/afiaafia/wedplan-client.git
+- **Backend repository:** https://github.com/afiaafia/wedplan-server.git
+- **Production API:** https://wedplan-server-vcdp.onrender.com
+
+## Technology stack
+
+- Next.js 16 (App Router, React 19, TypeScript)
+- Tailwind CSS 4
+- Framer Motion (with `reducedMotion="user"`)
+- Better Auth React client
+- Lucide React icons
+- Node.js test runner (TypeScript stripping)
+- pnpm 12.4.2
+
+## Main features
+
+- Responsive homepage with hero, six wedding service categories, database-backed featured services, benefits, and how-it-works sections.
+- Public service browsing with name search, category and location filters, price sorting, pagination, URL query synchronization, skeletons, empty/error states, and image fallbacks.
+- Dynamic service detail pages with gallery, vendor summary, and authenticated booking requests.
+- Email/password and Google authentication via Better Auth, including customer/vendor registration, password policy, logout, session refresh persistence, blocked-account handling, and role-based redirects.
+- Customer dashboard: booking statistics, booking history/detail, pending-booking cancellation, and profile settings with server-side ImgBB uploads.
+- Vendor dashboard: service CRUD, availability controls, booking request accept/reject, subscription status, and Stripe Checkout for Premium.
+- Admin dashboard: platform statistics, user search/block/unblock, service moderation, booking monitoring, and read-only transaction history.
+
+## Installation
+
+Prerequisites: Node.js 24 LTS (compatible with Next.js 16), pnpm 12.4.2, and a running WedPlan backend.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/afiaafia/wedplan-client.git
+cd wedplan-client
+pnpm install
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Fill in `.env.local` for local development, then start the app:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open http://localhost:3000.
 
-## Learn More
+## Commands
 
-To learn more about Next.js, take a look at the following resources:
+Use pnpm only; other package managers are not used by this project.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | Purpose |
+| --- | --- |
+| `pnpm dev` | Start the development server |
+| `pnpm build` | Create the production build |
+| `pnpm start` | Serve the production build |
+| `pnpm typecheck` | Run TypeScript without emitting files |
+| `pnpm lint` | Run ESLint |
+| `pnpm test` | Run the frontend Node test suite |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment variables
 
-## Deploy on Vercel
+| Variable | Scope | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | Browser | Backend API base URL for browser-side data requests |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Browser | Better Auth base URL (backend origin) |
+| `NEXT_PUBLIC_SITE_URL` | Browser | Frontend origin used in user-facing links |
+| `API_INTERNAL_URL` | Server only | Internal backend base URL for server components; takes precedence over public URL variables |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`NEXT_PUBLIC_*` values are embedded in the browser bundle. Never place secrets in them. Secrets such as the Better Auth secret, MongoDB URI, ImgBB key, and Stripe secret key belong only on the backend. See `.env.example` for local defaults.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project structure
+
+```text
+src/app/                    App Router pages (public, auth, and role dashboards)
+src/components/home/        Homepage sections
+src/components/services/    Browse/details/booking UI
+src/components/dashboard/   Customer, vendor, and admin dashboard UI
+src/components/layout/      Navbar, footer, theme toggle, toasts
+src/lib/                    API clients, auth helpers, filters, role utilities
+src/proxy.ts                Route/session/role guard (Next.js proxy)
+tests/                      Frontend API/helper tests
+public/                     Static assets
+```
+
+## Deployment
+
+Deployed on Vercel as an existing Next.js project. No `vercel.json` is required: the platform detects Next.js, uses `pnpm build`, and serves the App Router output. Dynamic dashboard and service-detail routes are server-rendered; nested route refreshes work with the default Vercel Next.js handling.
+
+Required Vercel environment variables are the same names shown above, with production values set in the Vercel dashboard. `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_BETTER_AUTH_URL` must point to the deployed backend. Image optimization is configured for `images.unsplash.com` in `next.config.ts`; other provider images use direct `<img>` URLs from the database.
+
+Cross-site authentication requires the backend to allow the Vercel origin in CORS and Better Auth trusted origins, and to configure session cookies for cross-site credentialed requests. See the backend README for the exact backend variables.
