@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerApiBaseUrl } from "@/lib/api-url";
+import { getSafeRedirectPath } from "@/lib/redirect-path";
 import { getRoleDashboard, normalizeRole } from "@/lib/roles";
+import { hasValidSessionExpiry } from "@/lib/session-expiry";
 
 const PROTECTED_PATHS = ["/dashboard"];
 const AUTH_PATHS = ["/sign-in", "/sign-up", "/vendor/sign-in"];
@@ -10,6 +13,9 @@ const ROLE_DASHBOARDS = [
 ];
 
 type ProxySession = {
+  session?: {
+    expiresAt?: unknown;
+  };
   user: {
     role?: unknown;
   };
@@ -50,7 +56,8 @@ export async function proxy(request: NextRequest) {
 
   if (isAuthPath && session && roleDashboard) {
     const requestedPath = getSafeRedirectPath(
-      request.nextUrl.searchParams.get("redirect")
+      request.nextUrl.searchParams.get("redirect"),
+      request.url
     );
     const target =
       requestedPath &&
@@ -71,18 +78,8 @@ function isRoleDashboardPath(path: string): boolean {
   );
 }
 
-function getSafeRedirectPath(value: string | null): string | null {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return null;
-  }
-  return value;
-}
-
 async function validateSession(request: NextRequest): Promise<ProxySession | null> {
-  const backendUrl =
-    process.env.BETTER_AUTH_URL ||
-    process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
-    "http://localhost:5000";
+  const backendUrl = getServerApiBaseUrl();
 
   try {
     const cookieHeader = request.headers.get("cookie") || "";
@@ -99,6 +96,7 @@ async function validateSession(request: NextRequest): Promise<ProxySession | nul
 
     const data: ProxySession | null = await response.json();
     if (!data?.user) return null;
+    if (!hasValidSessionExpiry(data.session?.expiresAt)) return null;
 
     return data;
   } catch {

@@ -1,7 +1,9 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getServerApiBaseUrl } from "@/lib/api-url";
 import { getRoleDashboard, normalizeRole, type UserRole } from "@/lib/roles";
+import { hasValidSessionExpiry } from "@/lib/session-expiry";
 import type { VendorPlan } from "@/lib/subscription";
 
 export type SessionUser = {
@@ -33,10 +35,7 @@ export type SessionData = {
 };
 
 export async function getServerSession(): Promise<SessionData | null> {
-  const backendUrl =
-    process.env.BETTER_AUTH_URL ||
-    process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
-    "http://localhost:5000";
+  const backendUrl = getServerApiBaseUrl();
 
   try {
     const cookieStore = await cookies();
@@ -60,6 +59,10 @@ export async function getServerSession(): Promise<SessionData | null> {
 
     const data: SessionData | null = await response.json();
     if (!data || !data.session || !data.user) {
+      return null;
+    }
+
+    if (!hasValidSessionExpiry(data.session.expiresAt)) {
       return null;
     }
 

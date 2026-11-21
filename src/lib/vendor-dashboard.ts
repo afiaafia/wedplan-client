@@ -1,22 +1,30 @@
+import type { VendorApiErrorCode } from "./vendor-api.ts";
+
 export type VendorApprovalStatus = "pending" | "approved" | "rejected";
 
 export type VendorService = {
   id: string;
   title: string;
   category: string;
+  description: string;
+  location: string;
   price: number;
   images: string[];
   approvalStatus: VendorApprovalStatus;
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type VendorBooking = {
   id: string;
-  serviceName: string;
-  customerName?: string | null;
+  serviceId: string;
+  customerId: string;
   eventDate: string;
+  eventLocation: string;
+  message: string;
   status: string;
+  createdAt: string;
 };
 
 export type VendorOverviewStats = {
@@ -32,6 +40,18 @@ export type VendorOverview = {
   bookings: VendorBooking[];
 };
 
+export type VendorDataState = "loading" | "error" | "empty" | "ready";
+
+export type VendorServiceEditorAction =
+  | { kind: "create" }
+  | { kind: "edit"; id: string }
+  | null;
+
+export type VendorOverviewError = {
+  message: string;
+  code: VendorApiErrorCode;
+} | null;
+
 export const EMPTY_VENDOR_OVERVIEW: VendorOverview = {
   stats: {
     totalServices: null,
@@ -42,6 +62,41 @@ export const EMPTY_VENDOR_OVERVIEW: VendorOverview = {
   services: [],
   bookings: [],
 };
+
+export function getVendorDataState(
+  overview: VendorOverview,
+  error: string | null
+): VendorDataState {
+  if (error) return "error";
+
+  const { totalServices, activeServices, pendingApproval, totalBookings } =
+    overview.stats;
+
+  if (
+    totalServices === null ||
+    activeServices === null ||
+    pendingApproval === null ||
+    totalBookings === null
+  ) {
+    return "loading";
+  }
+
+  if (overview.services.length === 0 && overview.bookings.length === 0) {
+    return "empty";
+  }
+
+  return "ready";
+}
+
+export function resolveBookingServiceName(
+  serviceId: string,
+  services: VendorService[]
+): string {
+  return (
+    services.find((service) => service.id === serviceId)?.title ||
+    "Service listing unavailable"
+  );
+}
 
 export function getInitials(name?: string | null): string {
   const initials = (name || "")

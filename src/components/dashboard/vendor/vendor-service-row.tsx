@@ -2,17 +2,40 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, ImageOff, Pencil } from "lucide-react";
+import { Eye, ImageOff, Loader2, Pencil, Power } from "lucide-react";
+import {
+  FREE_PLAN_LIMIT_MESSAGE,
+  isActiveServiceLimitReached,
+  type VendorPlan,
+} from "@/lib/subscription";
+import type { VendorApiErrorCode } from "@/lib/vendor-api";
 import {
   formatApprovalLabel,
   formatVendorPrice,
   type VendorService,
 } from "@/lib/vendor-dashboard";
 
-export default function VendorServiceRow({ service }: { service: VendorService }) {
+type VendorServiceRowProps = {
+  service: VendorService;
+  plan: VendorPlan;
+  activeServices: number | null;
+  busy: boolean;
+  actionError: { message: string; code: VendorApiErrorCode } | null;
+  onToggleActive: (service: VendorService) => void;
+};
+
+export default function VendorServiceRow({
+  service,
+  plan,
+  activeServices,
+  busy,
+  actionError,
+  onToggleActive,
+}: VendorServiceRowProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const canViewPublic = service.approvalStatus === "approved" && service.isActive;
   const image = service.images[0];
+  const atLimit = isActiveServiceLimitReached(activeServices, plan);
 
   const badgeClass =
     service.approvalStatus === "approved"
@@ -85,7 +108,7 @@ export default function VendorServiceRow({ service }: { service: VendorService }
           <button
             type="button"
             disabled
-            title="Public view is available after approval"
+            title="Public view is available after approval and activation"
             className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted opacity-60"
           >
             <Eye size={14} />
@@ -93,16 +116,50 @@ export default function VendorServiceRow({ service }: { service: VendorService }
           </button>
         )}
 
-        <button
-          type="button"
-          disabled
-          title="Service editing is planned for a later milestone"
-          className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted opacity-60"
+        <Link
+          href={`/dashboard/vendor?service=${encodeURIComponent(service.id)}`}
+          aria-label={`Edit ${service.title}`}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:border-primary hover:bg-secondary"
         >
           <Pencil size={14} />
           Edit
+        </Link>
+
+        <button
+          type="button"
+          onClick={() => onToggleActive(service)}
+          disabled={busy}
+          aria-busy={busy}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:border-primary hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {busy ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Power size={14} />
+          )}
+          {service.isActive ? "Deactivate" : "Activate"}
         </button>
       </div>
+
+      {!service.isActive && atLimit && plan === "free" && (
+        <p className="rounded-lg border border-champagne/30 bg-champagne/10 px-3 py-2 text-[11px] leading-5 text-champagne sm:col-span-2">
+          {FREE_PLAN_LIMIT_MESSAGE}
+        </p>
+      )}
+
+      {actionError && (
+        <p role="alert" className="text-[11px] leading-5 text-error">
+          {actionError.message}
+          {actionError.code === "UNAUTHORIZED" && (
+            <Link
+              href="/sign-in?redirect=/dashboard/vendor"
+              className="ml-1 font-semibold underline underline-offset-2"
+            >
+              Sign in again
+            </Link>
+          )}
+        </p>
+      )}
     </article>
   );
 }

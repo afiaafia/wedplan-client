@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/roles.test.ts tests/vendor-dashboard.test.ts"
+    "test": "node --experimental-strip-types --test tests/redirect-path.test.ts tests/roles.test.ts tests/session-expiry.test.ts tests/vendor-dashboard.test.ts tests/vendor-dashboard-request.test.ts tests/vendor-api.test.ts tests/featured-services.test.ts"
   },
   "dependencies": {
     "better-auth": "1.7.25",

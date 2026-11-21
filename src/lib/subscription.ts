@@ -1,37 +1,49 @@
 export const FREE_SERVICE_LIMIT = 3;
 export const PREMIUM_PRICE_LABEL = "$10/month";
+export const FREE_PLAN_LIMIT_MESSAGE =
+  "You've reached the Free plan limit of 3 active services. Deactivate a service or upgrade to Premium before activating another.";
 
 export const VENDOR_PLANS = ["free", "premium"] as const;
 
 export type VendorPlan = (typeof VENDOR_PLANS)[number];
 
-function isExpiredSubscription(value: unknown): boolean {
+function hasActiveSubscriptionExpiry(value: unknown): boolean {
   const now = Date.now();
+  let timestamp: number;
 
   if (value instanceof Date) {
-    return value.getTime() <= now;
+    timestamp = value.getTime();
+  } else if (typeof value === "number") {
+    timestamp = value;
+  } else if (typeof value === "string" && value.trim() !== "") {
+    timestamp = Date.parse(value);
+  } else {
+    return false;
   }
 
-  if (typeof value === "number") {
-    return value <= now;
-  }
-
-  if (typeof value === "string") {
-    const timestamp = Date.parse(value);
-    return Number.isFinite(timestamp) && timestamp <= now;
-  }
-
-  return false;
+  return Number.isFinite(timestamp) && timestamp > now;
 }
 
 export function resolveVendorPlan(plan: unknown, expiresAt?: unknown): VendorPlan {
   if (plan !== "premium") return "free";
-  if (isExpiredSubscription(expiresAt)) return "free";
-  return "premium";
+  return hasActiveSubscriptionExpiry(expiresAt) ? "premium" : "free";
 }
 
 export function getServiceLimit(plan: VendorPlan): number | null {
   return plan === "premium" ? null : FREE_SERVICE_LIMIT;
+}
+
+export function isActiveServiceLimitReached(
+  activeServices: number | null,
+  plan: VendorPlan
+): boolean {
+  const limit = getServiceLimit(plan);
+  return (
+    limit !== null &&
+    typeof activeServices === "number" &&
+    Number.isFinite(activeServices) &&
+    activeServices >= limit
+  );
 }
 
 export function formatServiceUsage(
@@ -49,7 +61,7 @@ export function formatServiceUsage(
   }
 
   const remaining = Math.max(0, FREE_SERVICE_LIMIT - count);
-  return `${count} of ${FREE_SERVICE_LIMIT} active services used · ${remaining} remaining`;
+  return `${count} / ${FREE_SERVICE_LIMIT} active services used · ${remaining} remaining`;
 }
 
 export function isValidStripeCheckoutUrl(value: unknown): value is string {

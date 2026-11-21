@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import VendorDashboard from "@/components/dashboard/vendor/vendor-dashboard";
 import { requireRole } from "@/lib/auth-server";
 import { resolveVendorPlan } from "@/lib/subscription";
-import { EMPTY_VENDOR_OVERVIEW } from "@/lib/vendor-dashboard";
+import { getVendorDashboardForServer } from "@/lib/vendor-api-server";
+import {
+  EMPTY_VENDOR_OVERVIEW,
+  type VendorOverviewError,
+  type VendorServiceEditorAction,
+} from "@/lib/vendor-dashboard";
 
 type VendorDashboardPageProps = {
   searchParams: Promise<{
     subscription?: string | string[];
+    service?: string | string[];
   }>;
 };
 
@@ -29,10 +36,28 @@ export default async function VendorDashboardPage({
     subscription === "success" || subscription === "cancelled"
       ? subscription
       : null;
+  const service = Array.isArray(query.service)
+    ? query.service[0]
+    : query.service;
+  const editorAction: VendorServiceEditorAction = service
+    ? service === "new"
+      ? { kind: "create" }
+      : { kind: "edit", id: service }
+    : null;
   const plan = resolveVendorPlan(
     user.subscriptionPlan,
     user.subscriptionExpiresAt
   );
+
+  const dashboard = await getVendorDashboardForServer();
+
+  if (!dashboard.ok && (dashboard.code === "UNAUTHORIZED" || dashboard.status === 401)) {
+    redirect("/sign-in?redirect=/dashboard/vendor");
+  }
+
+  const overviewError: VendorOverviewError = dashboard.ok
+    ? null
+    : { message: dashboard.message, code: dashboard.code };
 
   const currentDate = new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -53,7 +78,9 @@ export default async function VendorDashboardPage({
       plan={plan}
       redirectStatus={redirectStatus}
       currentDate={currentDate}
-      overview={EMPTY_VENDOR_OVERVIEW}
+      overview={dashboard.ok ? dashboard.overview : EMPTY_VENDOR_OVERVIEW}
+      overviewError={overviewError}
+      editorAction={editorAction}
     />
   );
 }

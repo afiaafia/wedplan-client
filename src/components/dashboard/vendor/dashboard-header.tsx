@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CalendarDays, Plus } from "lucide-react";
 import { getFirstName } from "@/lib/vendor-dashboard";
 
@@ -36,18 +37,13 @@ export default function DashboardHeader({
         <p className="mt-2 text-xs text-muted/80">Signed in as {email}</p>
       </div>
 
-      <button
-        type="button"
-        disabled
-        title="Service creation is planned for a later milestone"
-        className="group inline-flex shrink-0 items-center justify-center gap-2.5 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-80"
+      <Link
+        href="/dashboard/vendor?service=new"
+        className="group inline-flex shrink-0 items-center justify-center gap-2.5 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-hover"
       >
         <Plus size={17} />
         Add New Service
-        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-          Soon
-        </span>
-      </button>
+      </Link>
     </header>
   );
 }

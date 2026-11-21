@@ -52,7 +52,10 @@ test("status labels normalize known booking states", () => {
 });
 
 test("subscription plan resolution only trusts premium with a valid expiry", () => {
-  assert.equal(resolveVendorPlan("premium"), "premium");
+  assert.equal(resolveVendorPlan("premium"), "free");
+  assert.equal(resolveVendorPlan("premium", null), "free");
+  assert.equal(resolveVendorPlan("premium", "not-a-date"), "free");
+  assert.equal(resolveVendorPlan("premium", Number.NaN), "free");
   assert.equal(resolveVendorPlan("free"), "free");
   assert.equal(resolveVendorPlan(undefined), "free");
   assert.equal(
@@ -70,7 +73,7 @@ test("service limits and usage follow the resolved plan", () => {
   assert.equal(getServiceLimit("premium"), null);
   assert.equal(
     formatServiceUsage(2, "free"),
-    "2 of 3 active services used · 1 remaining"
+    "2 / 3 active services used · 1 remaining"
   );
   assert.equal(formatServiceUsage(7, "premium"), "7 active services");
   assert.equal(formatServiceUsage(null, "free"), "Usage unavailable");

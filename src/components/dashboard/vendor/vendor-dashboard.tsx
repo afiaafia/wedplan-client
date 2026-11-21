@@ -8,7 +8,11 @@ import SubscriptionCard from "./subscription-card";
 import VendorSidebar from "./vendor-sidebar";
 import type { UserRole } from "@/lib/roles";
 import type { VendorPlan } from "@/lib/subscription";
-import type { VendorOverview } from "@/lib/vendor-dashboard";
+import type {
+  VendorOverview,
+  VendorOverviewError,
+  VendorServiceEditorAction,
+} from "@/lib/vendor-dashboard";
 
 type VendorDashboardProps = {
   user: {
@@ -22,6 +26,8 @@ type VendorDashboardProps = {
   redirectStatus: "success" | "cancelled" | null;
   currentDate: string;
   overview: VendorOverview;
+  overviewError: VendorOverviewError;
+  editorAction: VendorServiceEditorAction;
 };
 
 export default function VendorDashboard({
@@ -31,6 +37,8 @@ export default function VendorDashboard({
   redirectStatus,
   currentDate,
   overview,
+  overviewError,
+  editorAction,
 }: VendorDashboardProps) {
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -48,12 +56,22 @@ export default function VendorDashboard({
           />
 
           <div className="space-y-8">
-            <OverviewStats stats={overview.stats} />
+            <OverviewStats stats={overview.stats} error={overviewError} />
 
             <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
               <div className="space-y-6">
-                <MyServices services={overview.services} />
-                <RecentBookings bookings={overview.bookings} />
+                <MyServices
+                  services={overview.services}
+                  plan={plan}
+                  activeServices={overview.stats.activeServices}
+                  error={overviewError}
+                  editorAction={editorAction}
+                />
+                <RecentBookings
+                  bookings={overview.bookings}
+                  services={overview.services}
+                  error={overviewError}
+                />
               </div>
 
               <div className="space-y-6">

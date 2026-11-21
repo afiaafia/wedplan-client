@@ -20,11 +20,13 @@ const actions: QuickAction[] = [
     title: "Add New Service",
     description: "Create a new listing for your business.",
     icon: <PlusCircle size={18} />,
+    href: "/dashboard/vendor?service=new",
   },
   {
     title: "My Services",
     description: "Review your current service listings.",
     icon: <Layers3 size={18} />,
+    href: "/dashboard/vendor#my-services",
   },
   {
     title: "Business Profile",

@@ -1,8 +1,17 @@
 import { CalendarCheck, Clock3, Layers3, Store } from "lucide-react";
+import DashboardDataError from "./dashboard-data-error";
 import StatCard from "./stat-card";
-import type { VendorOverviewStats } from "@/lib/vendor-dashboard";
+import type {
+  VendorOverviewError,
+  VendorOverviewStats,
+} from "@/lib/vendor-dashboard";
 
-export default function OverviewStats({ stats }: { stats: VendorOverviewStats }) {
+type OverviewStatsProps = {
+  stats: VendorOverviewStats;
+  error: VendorOverviewError;
+};
+
+export default function OverviewStats({ stats, error }: OverviewStatsProps) {
   const cards = [
     {
       label: "Total Services",
@@ -42,10 +51,18 @@ export default function OverviewStats({ stats }: { stats: VendorOverviewStats })
           </h2>
         </div>
         <p className="max-w-sm text-xs leading-5 text-muted">
-          Live figures appear once vendor-scoped API endpoints are connected. No
-          estimated numbers are shown.
+          Live figures from your vendor account. No estimated numbers are shown.
         </p>
       </div>
+
+      {error && (
+        <div className="mb-4">
+          <DashboardDataError
+            error={error}
+            title="Dashboard statistics are unavailable"
+          />
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (

@@ -16,8 +16,10 @@ import { getSession } from "@/lib/auth-client";
 import { normalizeRole, type UserRole } from "@/lib/roles";
 import {
   formatServiceUsage,
+  FREE_PLAN_LIMIT_MESSAGE,
   FREE_SERVICE_LIMIT,
   getServiceLimit,
+  isActiveServiceLimitReached,
   PREMIUM_PRICE_LABEL,
   resolveVendorPlan,
   type VendorPlan,
@@ -328,6 +330,17 @@ export default function SubscriptionCard({
           </p>
         </div>
       </div>
+
+      {!isPremium && isActiveServiceLimitReached(activeServices, currentPlan) && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-4 flex items-start gap-2.5 rounded-xl border border-champagne/30 bg-champagne/10 px-3.5 py-3 text-xs leading-5 text-champagne"
+        >
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <p>{FREE_PLAN_LIMIT_MESSAGE}</p>
+        </div>
+      )}
 
       {feedback && (
         <div

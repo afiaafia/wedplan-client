@@ -16,8 +16,14 @@ export default function StatCard({ icon, label, value, hint }: StatCardProps) {
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
           {icon}
         </span>
-        <span className="rounded-full bg-champagne/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-champagne">
-          API pending
+        <span
+          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+            hasValue
+              ? "bg-success/10 text-success"
+              : "bg-secondary text-muted"
+          }`}
+        >
+          {hasValue ? "Live" : "Unavailable"}
         </span>
       </div>
 

@@ -28,8 +28,16 @@ const items: SidebarItem[] = [
     href: "/dashboard/vendor",
     active: true,
   },
-  { label: "My Services", icon: <Layers3 size={18} /> },
-  { label: "Add Service", icon: <PlusCircle size={18} /> },
+  {
+    label: "My Services",
+    icon: <Layers3 size={18} />,
+    href: "/dashboard/vendor#my-services",
+  },
+  {
+    label: "Add Service",
+    icon: <PlusCircle size={18} />,
+    href: "/dashboard/vendor?service=new",
+  },
   { label: "Bookings", icon: <CalendarDays size={18} /> },
   { label: "Business Profile", icon: <Building2 size={18} /> },
   { label: "Settings", icon: <Settings size={18} /> },

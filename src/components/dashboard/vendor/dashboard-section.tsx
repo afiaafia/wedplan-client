@@ -7,6 +7,7 @@ type DashboardSectionProps = {
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  id?: string;
 };
 
 export default function DashboardSection({
@@ -16,9 +17,11 @@ export default function DashboardSection({
   action,
   children,
   className = "",
+  id,
 }: DashboardSectionProps) {
   return (
     <section
+      id={id}
       className={`rounded-2xl border border-border/70 bg-card/80 p-5 shadow-sm backdrop-blur-sm sm:p-6 ${className}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
