@@ -1,66 +1,46 @@
 import type { Metadata } from "next";
-import {
-  Heart,
-  CalendarDays,
-  Users,
-  Star,
-  LayoutDashboard,
-} from "lucide-react";
-import { requireRole } from "@/lib/auth-server";
-import { RoleDashboard } from "@/components/dashboard/role-dashboard";
+import { redirect } from "next/navigation";
+import CustomerOverviewStats from "@/components/dashboard/customer/customer-overview-stats";
+import CustomerQuickActions from "@/components/dashboard/customer/customer-quick-actions";
+import CustomerRecentBookings from "@/components/dashboard/customer/customer-recent-bookings";
+import { getCustomerDashboardForServer } from "@/lib/customer-api-server";
 
 export const instant = false;
 
 export const metadata: Metadata = {
   title: "Customer Dashboard",
-  description: "Plan your wedding on WedPlan.",
+  description: "Track your wedding bookings on WedPlan.",
 };
 
 export default async function CustomerDashboardPage() {
-  const { user } = await requireRole(["customer"]);
+  const dashboard = await getCustomerDashboardForServer();
+
+  if (!dashboard.ok && (dashboard.code === "UNAUTHORIZED" || dashboard.status === 401)) {
+    redirect("/sign-in?redirect=/dashboard/customer");
+  }
+
+  const error = dashboard.ok
+    ? null
+    : {
+        message: dashboard.message,
+        code: dashboard.code,
+        status: dashboard.status,
+      };
 
   return (
-    <RoleDashboard
-      user={user}
-      eyebrow="Couple dashboard"
-      title="Welcome back"
-      description="Discover trusted wedding professionals and keep every detail of your celebration in one beautiful place."
-      cards={[
-        {
-          icon: <Heart size={22} />,
-          title: "My Wedding",
-          description: "Track your overall planning progress and key milestones.",
-          href: "#",
-          comingSoon: true,
-        },
-        {
-          icon: <CalendarDays size={22} />,
-          title: "Timeline",
-          description: "Stay on top of every task and deadline leading up to your big day.",
-          href: "#",
-          comingSoon: true,
-        },
-        {
-          icon: <Users size={22} />,
-          title: "Vendors",
-          description: "Browse, compare, and manage your chosen wedding professionals.",
-          href: "/services",
-        },
-        {
-          icon: <Star size={22} />,
-          title: "Favourites",
-          description: "Revisit vendors and ideas you've saved for later.",
-          href: "#",
-          comingSoon: true,
-        },
-        {
-          icon: <LayoutDashboard size={22} />,
-          title: "Profile Settings",
-          description: "Update your account details, photo, and preferences.",
-          href: "#",
-          comingSoon: true,
-        },
-      ]}
-    />
+    <div className="space-y-8">
+      <CustomerOverviewStats
+        stats={dashboard.ok ? dashboard.data.stats : null}
+        error={error}
+      />
+
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,1fr)]">
+        <CustomerRecentBookings
+          bookings={dashboard.ok ? dashboard.data.bookings : []}
+          error={error}
+        />
+        <CustomerQuickActions />
+      </div>
+    </div>
   );
 }
