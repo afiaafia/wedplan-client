@@ -8,6 +8,8 @@ export type CheckoutErrorCode =
   | "UNAUTHORIZED"
   | "VENDOR_ACCESS_REQUIRED"
   | "ACCOUNT_BLOCKED"
+  | "PREMIUM_ALREADY_ACTIVE"
+  | "CHECKOUT_CONFIGURATION"
   | "INVALID_CHECKOUT_URL"
   | "NETWORK"
   | "UNKNOWN";
@@ -28,6 +30,15 @@ function normalizeErrorCode(value: unknown, status: number): CheckoutErrorCode {
   if (value === "UNAUTHORIZED") return "UNAUTHORIZED";
   if (value === "VENDOR_ACCESS_REQUIRED") return "VENDOR_ACCESS_REQUIRED";
   if (value === "ACCOUNT_BLOCKED") return "ACCOUNT_BLOCKED";
+  if (value === "PREMIUM_ALREADY_ACTIVE") return "PREMIUM_ALREADY_ACTIVE";
+  if (
+    value === "STRIPE_PRICE_NOT_CONFIGURED" ||
+    value === "INVALID_SUBSCRIPTION_PRICE" ||
+    value === "SUBSCRIPTION_PRICE_INACTIVE" ||
+    value === "INVALID_SUBSCRIPTION_AMOUNT"
+  ) {
+    return "CHECKOUT_CONFIGURATION";
+  }
   if (value === "INVALID_CHECKOUT_URL") return "INVALID_CHECKOUT_URL";
   if (status === 401) return "UNAUTHORIZED";
   return "UNKNOWN";
@@ -54,6 +65,10 @@ function errorMessageFor(code: CheckoutErrorCode, serverMessage?: string): strin
       return "Only vendor accounts can purchase WedPlan Premium.";
     case "ACCOUNT_BLOCKED":
       return "Your account is blocked and cannot start checkout. Please contact support.";
+    case "PREMIUM_ALREADY_ACTIVE":
+      return "Premium is already active on your account. No payment is needed.";
+    case "CHECKOUT_CONFIGURATION":
+      return "Checkout is temporarily unavailable. Please try again later.";
     case "INVALID_CHECKOUT_URL":
       return "Stripe did not return a valid checkout link. Please try again.";
     case "NETWORK":
