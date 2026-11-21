@@ -7,12 +7,17 @@ export const SERVICE_CATEGORIES = [
   "Makeup & Beauty",
   "Music & Entertainment",
   "Wedding Planning",
+  "Wedding Fashion",
   "Other",
 ] as const;
 
 export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
 
-export type PublicServiceSort = "newest" | "price_asc" | "price_desc";
+export type PublicServiceSort =
+  | "recommended"
+  | "newest"
+  | "price_asc"
+  | "price_desc";
 
 export interface PublicService {
   id: string;
@@ -23,6 +28,18 @@ export interface PublicService {
   price: number;
   images: string[];
   createdAt: string;
+  vendor?: ServiceVendor | null;
+}
+
+export interface ServiceVendor {
+  id: string;
+  name?: string;
+  profileImage?: string;
+  businessName?: string;
+}
+
+export interface ServiceDetail extends PublicService {
+  vendor?: ServiceVendor | null;
 }
 
 export interface ServicesMeta {
@@ -42,7 +59,7 @@ export interface ServicesResponse {
 
 export interface ServiceResponse {
   success: true;
-  data: PublicService;
+  data: ServiceDetail;
 }
 
 export interface ServiceBrowseParams {
@@ -117,7 +134,7 @@ export async function getPublicServices(
 export async function getPublicService(
   id: string,
   signal?: AbortSignal
-): Promise<PublicService> {
+): Promise<ServiceDetail> {
   const response = await fetch(
     `${API_BASE_URL}/api/services/${encodeURIComponent(id)}`,
     { signal, cache: "no-store" }
@@ -142,5 +159,8 @@ export async function getPublicService(
 }
 
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(price);
+  const safePrice = Number.isFinite(price) ? price : 0;
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(safePrice);
 }

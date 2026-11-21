@@ -1,68 +1,50 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
   RotateCcw,
-  Search,
   SearchX,
   SlidersHorizontal,
+  X,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import ServiceCard from "./service-card";
+import ServicesPageHeader from "./services-page-header";
 import ServicesSkeleton from "./services-skeleton";
 import {
   ApiError,
   buildServicesQuery,
   getPublicServices,
-  SERVICE_CATEGORIES,
-  type PublicServiceSort,
-  type ServiceBrowseParams,
   type ServicesResponse,
 } from "@/lib/services-api";
+import {
+  BROWSE_CATEGORY_OPTIONS,
+  BROWSE_SORT_OPTIONS,
+  DEFAULT_BROWSE_SORT,
+  isCategorySelected,
+  readBrowseParams,
+  writeBrowseParams,
+} from "@/lib/services-filters";
 
-const SORT_OPTIONS: { value: PublicServiceSort; label: string }[] = [
-  { value: "newest", label: "Newest first" },
-  { value: "price_asc", label: "Price: low to high" },
-  { value: "price_desc", label: "Price: high to low" },
-];
+const SEARCH_DEBOUNCE_MS = 350;
 
-const categoryValues = SERVICE_CATEGORIES as readonly string[];
-
-function writeParam(searchParams: URLSearchParams, key: string, value: string) {
-  if (value) {
-    searchParams.set(key, value);
-  } else {
-    searchParams.delete(key);
-  }
-}
-
-function readParams(searchParams: ReturnType<typeof useSearchParams>): ServiceBrowseParams {
-  const rawSort = searchParams.get("sort");
-  const sort = SORT_OPTIONS.some((option) => option.value === rawSort)
-    ? (rawSort as PublicServiceSort)
-    : "newest";
-  const rawCategory = searchParams.get("category") ?? "";
-  const rawPage = Number.parseInt(searchParams.get("page") ?? "1", 10);
-
-  return {
-    q: searchParams.get("q")?.trim() ?? "",
-    category: categoryValues.includes(rawCategory) ? rawCategory : "",
-    location: searchParams.get("location")?.trim() ?? "",
-    sort,
-    page: Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1,
-  };
+interface FetchState {
+  key: string;
+  data: ServicesResponse | null;
+  error: string | null;
 }
 
 export default function BrowseServices() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const reduceMotion = useReducedMotion();
 
   const params = useMemo(
-    () => readParams(searchParams),
+    () => readBrowseParams(new URLSearchParams(searchParams.toString())),
     [searchParams]
   );
 
@@ -72,11 +54,13 @@ export default function BrowseServices() {
     committedQ: params.q,
     committedLocation: params.location,
   });
-  const [fetchState, setFetchState] = useState<{
-    key: string;
-    data: ServicesResponse | null;
-    error: string | null;
-  }>({ key: "", data: null, error: null });
+  const queryInput = textFilters.q;
+  const locationInput = textFilters.location;
+  const [fetchState, setFetchState] = useState<FetchState>({
+    key: "",
+    data: null,
+    error: null,
+  });
   const [retryCount, setRetryCount] = useState(0);
   const requestId = useRef(0);
 
@@ -93,58 +77,31 @@ export default function BrowseServices() {
   }
 
   const updateParams = useCallback(
-    (patch: Partial<ServiceBrowseParams>, resetPage = false) => {
-      const next = new URLSearchParams(searchParams.toString());
-
-      if (patch.q !== undefined) writeParam(next, "q", patch.q.trim());
-      if (patch.category !== undefined) {
-        writeParam(next, "category", patch.category);
-      }
-      if (patch.location !== undefined) {
-        writeParam(next, "location", patch.location.trim());
-      }
-      if (patch.sort !== undefined) {
-        writeParam(next, "sort", patch.sort === "newest" ? "" : patch.sort);
-      }
-      if (patch.page !== undefined) {
-        writeParam(next, "page", patch.page === 1 ? "" : String(patch.page));
-      }
-      if (resetPage) next.delete("page");
-
+    (patch: Parameters<typeof writeBrowseParams>[1], resetPage = false) => {
+      const next = writeBrowseParams(
+        new URLSearchParams(searchParams.toString()),
+        patch,
+        resetPage
+      );
       const nextQuery = next.toString();
       if (nextQuery === searchParams.toString()) return;
 
-      router.replace(
-        nextQuery ? `${pathname}?${nextQuery}` : pathname,
-        { scroll: false }
-      );
+      router.replace(nextQuery ? `/services?${nextQuery}` : "/services", {
+        scroll: false,
+      });
     },
-    [pathname, router, searchParams]
+    [router, searchParams]
   );
 
   useEffect(() => {
-    if (
-      textFilters.q === params.q &&
-      textFilters.location === params.location
-    ) {
-      return;
-    }
+    if (queryInput === params.q && locationInput === params.location) return;
 
     const timer = setTimeout(() => {
-      updateParams(
-        { q: textFilters.q, location: textFilters.location },
-        true
-      );
-    }, 350);
+      updateParams({ q: queryInput, location: locationInput }, true);
+    }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [
-    textFilters.q,
-    textFilters.location,
-    params.q,
-    params.location,
-    updateParams,
-  ]);
+  }, [queryInput, locationInput, params.q, params.location, updateParams]);
 
   const query = useMemo(
     () =>
@@ -161,12 +118,11 @@ export default function BrowseServices() {
   const requestKey = `${query}|${retryCount}`;
   const isLoading = fetchState.key !== requestKey;
   const result = fetchState.data;
-  const errorMessage = fetchState.error ?? "";
-  const status = isLoading
-    ? "loading"
-    : errorMessage
-      ? "error"
-      : "success";
+  const errorMessage = fetchState.error;
+  const hasFilters = Boolean(
+    params.q || params.category || params.location || params.sort !== DEFAULT_BROWSE_SORT
+  );
+  const count = result?.meta.total ?? 0;
 
   useEffect(() => {
     const currentRequest = ++requestId.current;
@@ -178,9 +134,7 @@ export default function BrowseServices() {
         setFetchState({ key: requestKey, data, error: null });
       })
       .catch((error: unknown) => {
-        if (currentRequest !== requestId.current || controller.signal.aborted) {
-          return;
-        }
+        if (currentRequest !== requestId.current || controller.signal.aborted) return;
         setFetchState({
           key: requestKey,
           data: null,
@@ -194,13 +148,13 @@ export default function BrowseServices() {
     return () => controller.abort();
   }, [query, requestKey]);
 
-  const hasFilters = Boolean(
-    params.q || params.category || params.location || params.sort !== "newest"
-  );
-
   function clearAll() {
-    setTextFilters((current) => ({ ...current, q: "", location: "" }));
-    router.replace(pathname, { scroll: false });
+    setTextFilters((current) => ({
+      ...current,
+      q: "",
+      location: "",
+    }));
+    router.replace("/services", { scroll: false });
   }
 
   const fieldClass =
@@ -208,82 +162,106 @@ export default function BrowseServices() {
 
   return (
     <>
+      <ServicesPageHeader
+        query={queryInput}
+        onQueryChange={(value) =>
+          setTextFilters((current) => ({ ...current, q: value }))
+        }
+        onSearch={() => updateParams({ q: queryInput }, true)}
+        count={count}
+        isLoading={isLoading}
+      />
+
       <section
         aria-label="Service filters"
-        className="rounded-2xl border border-border/80 bg-card/70 p-5 shadow-sm backdrop-blur-sm sm:p-6"
+        className="mt-8 rounded-2xl border border-border/80 bg-card/70 p-5 shadow-sm backdrop-blur-sm sm:p-6"
       >
-        <div className="flex items-center gap-2.5">
-          <SlidersHorizontal size={17} className="text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">
-            Find your perfect match
-          </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <SlidersHorizontal size={17} className="text-primary" aria-hidden="true" />
+            <h2 className="text-sm font-semibold text-foreground">
+              Find your perfect match
+            </h2>
+          </div>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearAll}
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <RotateCcw size={13} aria-hidden="true" />
+              Clear all filters
+            </button>
+          )}
         </div>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="md:col-span-2 xl:col-span-1">
-            <label htmlFor="service-search" className="sr-only">
-              Search services by keyword
-            </label>
-            <div className="relative">
-              <Search
-                size={16}
-                aria-hidden="true"
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
-              />
-              <input
-                id="service-search"
-                type="search"
-                value={textFilters.q}
-                onChange={(event) =>
-                  setTextFilters((current) => ({
-                    ...current,
-                    q: event.target.value,
-                  }))
-                }
-                placeholder="Search services..."
-                className={`${fieldClass} pl-10`}
-              />
-            </div>
-          </div>
+        <div className="mt-5 -mx-1 flex gap-2 overflow-x-auto px-1 pb-2 sm:flex-wrap sm:overflow-visible sm:pb-0">
+          <button
+            type="button"
+            aria-pressed={!params.category}
+            onClick={() => updateParams({ category: "" }, true)}
+            className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+              !params.category
+                ? "border-primary bg-primary text-white"
+                : "border-border bg-background text-muted hover:border-primary hover:text-primary"
+            }`}
+          >
+            All Categories
+          </button>
+          {BROWSE_CATEGORY_OPTIONS.map((option) => {
+            const value = option.values.join(",");
+            const active = isCategorySelected(params.category, option.values);
+            return (
+              <button
+                key={option.label}
+                type="button"
+                aria-pressed={active}
+                onClick={() => updateParams({ category: value }, true)}
+                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                  active
+                    ? "border-primary bg-primary text-white"
+                    : "border-border bg-background text-muted hover:border-primary hover:text-primary"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
 
-          <div>
-            <label htmlFor="service-category" className="sr-only">
-              Filter by category
-            </label>
-            <select
-              id="service-category"
-              value={params.category}
-              onChange={(event) =>
-                updateParams({ category: event.target.value }, true)
-              }
-              className={fieldClass}
-            >
-              <option value="">All categories</option>
-              {SERVICE_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
           <div>
             <label htmlFor="service-location" className="sr-only">
               Filter by location
             </label>
-            <input
-              id="service-location"
-              type="search"
-              value={textFilters.location}
-              onChange={(event) =>
-                setTextFilters((current) => ({
-                  ...current,
-                  location: event.target.value,
-                }))
-              }
-              placeholder="Location, e.g. Lagos"
-              className={fieldClass}
-            />
+            <div className="relative">
+              <input
+                id="service-location"
+                type="search"
+                value={locationInput}
+                onChange={(event) =>
+                  setTextFilters((current) => ({
+                    ...current,
+                    location: event.target.value,
+                  }))
+                }
+                placeholder="Location, e.g. Dhaka"
+                className={`${fieldClass} pr-10`}
+              />
+              {locationInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTextFilters((current) => ({ ...current, location: "" }));
+                    updateParams({ location: "" }, true);
+                  }}
+                  aria-label="Clear location filter"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted transition-colors hover:bg-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <X size={14} aria-hidden="true" />
+                </button>
+              )}
+            </div>
           </div>
 
           <div>
@@ -294,42 +272,36 @@ export default function BrowseServices() {
               id="service-sort"
               value={params.sort}
               onChange={(event) =>
-                updateParams(
-                  { sort: event.target.value as PublicServiceSort },
-                  true
-                )
+                updateParams({ sort: event.target.value as typeof params.sort }, true)
               }
               className={fieldClass}
             >
-              {SORT_OPTIONS.map((option) => (
+              {BROWSE_SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
             </select>
           </div>
-        </div>
 
-        {hasFilters && (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <RotateCcw size={13} />
-            Clear all filters
-          </button>
-        )}
+          <p className="self-center text-xs text-muted sm:text-right">
+            Showing {result?.data.length ?? 0} of {count}
+          </p>
+        </div>
       </section>
 
-      {status === "loading" && <div className="mt-8"><ServicesSkeleton /></div>}
+      {isLoading && (
+        <div className="mt-8">
+          <ServicesSkeleton compact />
+        </div>
+      )}
 
-      {status === "error" && (
+      {!isLoading && errorMessage && (
         <div
           role="alert"
           className="mt-8 rounded-2xl border border-error/30 bg-card p-10 text-center"
         >
-          <AlertCircle size={28} className="mx-auto text-error" />
+          <AlertCircle size={28} className="mx-auto text-error" aria-hidden="true" />
           <h2 className="mt-4 font-serif text-xl text-foreground">
             We couldn&apos;t load services
           </h2>
@@ -338,31 +310,20 @@ export default function BrowseServices() {
           </p>
           <button
             type="button"
-            onClick={() => setRetryCount((count) => count + 1)}
+            onClick={() => setRetryCount((value) => value + 1)}
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <RotateCcw size={15} />
+            <RotateCcw size={15} aria-hidden="true" />
             Try again
           </button>
         </div>
       )}
 
-      {status === "success" && result && (
+      {!isLoading && !errorMessage && result && (
         <>
-          <div className="mt-9 flex flex-wrap items-center justify-between gap-3">
-            <p aria-live="polite" className="text-sm text-muted">
-              {result.meta.total} {result.meta.total === 1 ? "service" : "services"} found
-            </p>
-            {result.meta.total > 0 && (
-              <p className="text-xs text-muted">
-                Page {result.meta.page} of {result.meta.totalPages}
-              </p>
-            )}
-          </div>
-
           {result.data.length === 0 ? (
-            <div className="mt-5 rounded-2xl border border-border/80 bg-card/70 px-6 py-16 text-center">
-              <SearchX size={30} className="mx-auto text-accent" />
+            <div className="mt-8 rounded-2xl border border-border/80 bg-card/70 px-6 py-16 text-center">
+              <SearchX size={30} className="mx-auto text-accent" aria-hidden="true" />
               <h2 className="mt-5 font-serif text-2xl text-foreground">
                 No services found
               </h2>
@@ -377,14 +338,14 @@ export default function BrowseServices() {
                   onClick={clearAll}
                   className="mt-6 inline-flex items-center gap-2 rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
-                  <RotateCcw size={14} />
+                  <RotateCcw size={14} aria-hidden="true" />
                   Clear all filters
                 </button>
               )}
             </div>
           ) : (
             <motion.div
-              className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+              className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
               initial={reduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.25 }}
@@ -408,29 +369,28 @@ export default function BrowseServices() {
           {result.meta.totalPages > 1 && (
             <nav
               aria-label="Services pagination"
-              className="mt-10 flex items-center justify-center gap-3"
+              className="mt-10 flex flex-wrap items-center justify-center gap-3"
             >
               <button
                 type="button"
                 disabled={!result.meta.hasPreviousPage}
                 onClick={() => updateParams({ page: params.page - 1 })}
-                className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
+                <ChevronLeft size={15} aria-hidden="true" />
                 Previous
               </button>
-              <span
-                aria-current="page"
-                className="px-2 text-sm text-muted"
-              >
-                {result.meta.page} / {result.meta.totalPages}
+              <span aria-current="page" className="px-2 text-sm text-muted">
+                Page {result.meta.page} of {result.meta.totalPages}
               </span>
               <button
                 type="button"
                 disabled={!result.meta.hasNextPage}
                 onClick={() => updateParams({ page: params.page + 1 })}
-                className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Next
+                <ChevronRight size={15} aria-hidden="true" />
               </button>
             </nav>
           )}
