@@ -12,6 +12,7 @@ import {
   toCreateServiceInput,
   toUpdateServiceInput,
   updateVendorService,
+  uploadServiceImages,
   validateServiceForm,
   type ServiceFormErrors,
   type ServiceFormValues,
@@ -63,6 +64,10 @@ export default function ServiceForm({
     code: string;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const atLimit = isActiveServiceLimitReached(activeServices, plan);
 
@@ -72,6 +77,38 @@ export default function ServiceForm({
   ) {
     setValues((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+  }
+
+  async function handleImageUpload() {
+    if (selectedImages.length === 0 || uploadingImages) return;
+
+    setUploadingImages(true);
+    setImageUploadError(null);
+
+    try {
+      const urls = await uploadServiceImages(selectedImages);
+      setValues((current) => {
+        const existing = current.images
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+        return {
+          ...current,
+          images: [...existing, ...urls].join("\n"),
+        };
+      });
+      setErrors((current) => ({ ...current, images: undefined }));
+      setSelectedImages([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (error) {
+      setImageUploadError(
+        error instanceof Error
+          ? error.message
+          : "Unable to upload these images right now."
+      );
+    } finally {
+      setUploadingImages(false);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -243,8 +280,44 @@ export default function ServiceForm({
 
         <div className="sm:col-span-2">
           <label htmlFor="service-images" className="text-xs font-semibold text-foreground">
-            Image URLs <span className="font-normal text-muted">(optional, one per line)</span>
+            Images <span className="font-normal text-muted">(optional)</span>
           </label>
+          <p className="mt-1 text-xs leading-5 text-muted">
+            Upload photos to hosted image storage, or paste hosted image URLs
+            below (one per line). Uploaded URLs are saved with the service.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              aria-label="Choose service images"
+              onChange={(event) => {
+                setSelectedImages(Array.from(event.target.files ?? []));
+                setImageUploadError(null);
+              }}
+              className="max-w-full text-xs text-muted file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary"
+            />
+            <button
+              type="button"
+              onClick={handleImageUpload}
+              disabled={selectedImages.length === 0 || uploadingImages}
+              className="rounded-full border border-primary px-3.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {uploadingImages ? "Uploading…" : "Upload images"}
+            </button>
+            {selectedImages.length > 0 && (
+              <span className="text-xs text-muted">
+                {selectedImages.length} selected
+              </span>
+            )}
+          </div>
+          {imageUploadError && (
+            <p role="alert" className="mt-2 text-xs text-error">
+              {imageUploadError}
+            </p>
+          )}
           <textarea
             id="service-images"
             rows={3}
@@ -252,7 +325,7 @@ export default function ServiceForm({
             onChange={(event) => update("images", event.target.value)}
             aria-invalid={Boolean(errors.images)}
             placeholder="https://example.com/photo.jpg"
-            className={fieldClass}
+            className={`${fieldClass} mt-2`}
           />
           {errors.images && (
             <p className="mt-1 text-xs text-error">{errors.images}</p>
