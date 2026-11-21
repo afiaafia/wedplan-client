@@ -3,10 +3,14 @@ import {
   type ServiceCategory,
 } from "./services-api.ts";
 import type {
+  BookingPerson,
+  PaginationMeta,
   VendorApprovalStatus,
   VendorBooking,
+  VendorBookingView,
   VendorOverview,
   VendorService,
+  VendorSubscriptionSummary,
 } from "./vendor-dashboard.ts";
 
 export const VENDOR_API_BASE_URL = (
@@ -22,6 +26,8 @@ export type VendorApiErrorCode =
   | "ACCOUNT_BLOCKED"
   | "FORBIDDEN"
   | "FREE_PLAN_LIMIT_REACHED"
+  | "IMAGE_UPLOAD_UNAVAILABLE"
+  | "IMAGE_UPLOAD_FAILED"
   | "VALIDATION_ERROR"
   | "SERVICE_NOT_FOUND"
   | "INTERNAL_ERROR"
@@ -92,6 +98,10 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function text(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
 function readErrorBody(body: unknown): {
   message?: string;
   code?: unknown;
@@ -117,6 +127,8 @@ export function normalizeVendorApiCode(
   if (code === "VENDOR_ACCESS_REQUIRED") return "VENDOR_ACCESS_REQUIRED";
   if (code === "ACCOUNT_BLOCKED") return "ACCOUNT_BLOCKED";
   if (code === "FREE_PLAN_LIMIT_REACHED") return "FREE_PLAN_LIMIT_REACHED";
+  if (code === "IMAGE_UPLOAD_UNAVAILABLE") return "IMAGE_UPLOAD_UNAVAILABLE";
+  if (code === "IMAGE_UPLOAD_FAILED") return "IMAGE_UPLOAD_FAILED";
   if (code === "VALIDATION_ERROR") return "VALIDATION_ERROR";
   if (code === "SERVICE_NOT_FOUND") return "SERVICE_NOT_FOUND";
   if (code === "NOT_FOUND") return "UNKNOWN";
@@ -178,6 +190,10 @@ export function messageForVendorApiError(error: VendorApiError): string {
       return "You don't have permission to perform this action.";
     case "FREE_PLAN_LIMIT_REACHED":
       return "Free plan supports at most 3 active services. Deactivate a service or upgrade to Premium before activating another.";
+    case "IMAGE_UPLOAD_UNAVAILABLE":
+      return "Image uploads are not configured on the server yet. You can add hosted image URLs manually.";
+    case "IMAGE_UPLOAD_FAILED":
+      return "The images could not be uploaded. Check the files and try again, or add hosted image URLs manually.";
     case "VALIDATION_ERROR":
       return (
         formatValidationDetails(error.details) ||
@@ -244,6 +260,10 @@ function parseVendorService(value: unknown): VendorService {
     price: value.price,
     images: value.images as string[],
     approvalStatus: value.approvalStatus as VendorApprovalStatus,
+    ...(typeof value.rejectionReason === "string"
+      ? { rejectionReason: value.rejectionReason }
+      : {}),
+    ...(typeof value.vendorName === "string" ? { vendorName: value.vendorName } : {}),
     isActive: value.isActive,
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
@@ -285,6 +305,146 @@ function parseVendorBooking(value: unknown): VendorBooking {
   };
 }
 
+function parseBookingPerson(value: unknown, fallbackId: string): BookingPerson {
+  if (!isRecord(value)) {
+    return { id: fallbackId, name: "Account unavailable" };
+  }
+
+  return {
+    id: typeof value.id === "string" ? value.id : fallbackId,
+    name: typeof value.name === "string" && value.name.trim() ? value.name : "Account unavailable",
+    ...(typeof value.image === "string" ? { image: value.image } : {}),
+    ...(typeof value.businessName === "string"
+      ? { businessName: value.businessName }
+      : {}),
+  };
+}
+
+export function parseVendorBookingView(value: unknown): VendorBookingView {
+  const base = parseVendorBooking(value);
+  if (!isRecord(value)) return { ...base, serviceTitle: "", customer: { id: base.customerId, name: "" }, updatedAt: "" };
+
+  return {
+    ...base,
+    serviceTitle:
+      typeof value.serviceTitle === "string" ? value.serviceTitle : "Service unavailable",
+    customer: parseBookingPerson(value.customer, base.customerId),
+    updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : "",
+  };
+}
+
+function parsePaginationMeta(value: unknown): PaginationMeta {
+  const fallback: PaginationMeta = {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
+
+  if (!isRecord(value)) return fallback;
+
+  return {
+    page: isFiniteNumber(value.page) ? value.page : fallback.page,
+    limit: isFiniteNumber(value.limit) ? value.limit : fallback.limit,
+    total: isFiniteNumber(value.total) ? value.total : fallback.total,
+    totalPages: isFiniteNumber(value.totalPages) ? value.totalPages : fallback.totalPages,
+    hasNextPage: value.hasNextPage === true,
+    hasPreviousPage: value.hasPreviousPage === true,
+  };
+}
+
+export function parsePaginatedResponse<T>(
+  body: unknown,
+  parser: (value: unknown) => T,
+  message: string
+): { items: T[]; meta: PaginationMeta } {
+  if (
+    !isRecord(body) ||
+    body.success !== true ||
+    !Array.isArray(body.data) ||
+    !isRecord(body.meta)
+  ) {
+    throw new VendorApiError(message, 0, "UNEXPECTED_RESPONSE");
+  }
+
+  return {
+    items: body.data.map(parser),
+    meta: parsePaginationMeta(body.meta),
+  };
+}
+
+export function parseVendorSubscriptionResponse(
+  body: unknown
+): VendorSubscriptionSummary {
+  if (!isRecord(body) || body.success !== true || !isRecord(body.data)) {
+    throw new VendorApiError(
+      "The server returned an unexpected subscription response.",
+      0,
+      "UNEXPECTED_RESPONSE"
+    );
+  }
+
+  const data = body.data;
+  const statuses = ["active", "expired", "pending", "failed", "cancelled", "none"];
+  if (
+    (data.plan !== "free" && data.plan !== "premium") ||
+    (typeof data.status !== "string" || !statuses.includes(data.status)) ||
+    !isFiniteNumber(data.activeServices)
+  ) {
+    throw new VendorApiError(
+      "The server returned an unexpected subscription response.",
+      0,
+      "UNEXPECTED_RESPONSE"
+    );
+  }
+
+  const price = isRecord(data.price)
+    ? {
+        amount: isFiniteNumber(data.price.amount) ? data.price.amount : 0,
+        currency: text(data.price.currency, "usd"),
+        interval: text(data.price.interval, "month"),
+      }
+    : null;
+
+  const recentTransactions = Array.isArray(data.recentTransactions)
+    ? data.recentTransactions.flatMap((entry) => {
+        if (!isRecord(entry) || typeof entry.id !== "string") return [];
+        return [
+          {
+            id: entry.id,
+            status: text(entry.status, "pending"),
+            amount: isFiniteNumber(entry.amount) ? entry.amount : 0,
+            currency: text(entry.currency, "usd"),
+            createdAt: text(entry.createdAt),
+            ...(typeof entry.stripeSessionId === "string"
+              ? { stripeSessionId: entry.stripeSessionId }
+              : {}),
+          },
+        ];
+      })
+    : [];
+
+  return {
+    plan: data.plan,
+    storedPlan:
+      data.storedPlan === "free" || data.storedPlan === "premium"
+        ? data.storedPlan
+        : "unknown",
+    status: data.status as VendorSubscriptionSummary["status"],
+    startedAt: typeof data.startedAt === "string" ? data.startedAt : null,
+    expiresAt: typeof data.expiresAt === "string" ? data.expiresAt : null,
+    activeServices: data.activeServices,
+    activeServiceLimit: isFiniteNumber(data.activeServiceLimit)
+      ? data.activeServiceLimit
+      : null,
+    checkoutAvailable: data.checkoutAvailable === true,
+    price,
+    recentTransactions,
+  };
+}
+
 export function parseVendorDashboardResponse(body: unknown): VendorOverview {
   if (!isRecord(body) || body.success !== true || !isRecord(body.data)) {
     throw new VendorApiError(
@@ -318,6 +478,20 @@ export function parseVendorDashboardResponse(body: unknown): VendorOverview {
       activeServices: stats.activeServices,
       pendingApproval: stats.pendingApproval,
       totalBookings: stats.totalBookings,
+      pendingBookingRequests: isFiniteNumber(stats.pendingBookingRequests)
+        ? stats.pendingBookingRequests
+        : null,
+      acceptedBookings: isFiniteNumber(stats.acceptedBookings)
+        ? stats.acceptedBookings
+        : null,
+      currentSubscriptionPlan:
+        stats.currentSubscriptionPlan === "premium" ||
+        stats.currentSubscriptionPlan === "free"
+          ? stats.currentSubscriptionPlan
+          : null,
+      activeServiceLimit: isFiniteNumber(stats.activeServiceLimit)
+        ? stats.activeServiceLimit
+        : null,
     },
     services: services.map(parseVendorService),
     bookings: bookings.map(parseVendorBooking),
@@ -394,6 +568,121 @@ export function parseImageUrls(value: string): string[] {
     .filter(Boolean);
 }
 
+export const SERVICE_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+] as const;
+export const MAX_SERVICE_IMAGES = 10;
+export const MAX_SERVICE_IMAGE_BYTES = 5 * 1024 * 1024;
+
+export type ServiceImageUpload = { name: string; data: string };
+
+export async function toImageUploadPayload(
+  files: File[]
+): Promise<ServiceImageUpload[]> {
+  if (files.length === 0) {
+    throw new VendorApiError(
+      "Choose at least one image to upload.",
+      0,
+      "VALIDATION_ERROR"
+    );
+  }
+
+  if (files.length > MAX_SERVICE_IMAGES) {
+    throw new VendorApiError(
+      `Upload at most ${MAX_SERVICE_IMAGES} images at a time.`,
+      0,
+      "VALIDATION_ERROR"
+    );
+  }
+
+  const payload: ServiceImageUpload[] = [];
+
+  for (const file of files) {
+    if (
+      !SERVICE_IMAGE_TYPES.includes(file.type as (typeof SERVICE_IMAGE_TYPES)[number])
+    ) {
+      throw new VendorApiError(
+        `${file.name} is not a supported image type.`,
+        0,
+        "VALIDATION_ERROR"
+      );
+    }
+
+    if (file.size === 0 || file.size > MAX_SERVICE_IMAGE_BYTES) {
+      throw new VendorApiError(
+        `${file.name} must be between 1 byte and 5 MB.`,
+        0,
+        "VALIDATION_ERROR"
+      );
+    }
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let index = 0; index < bytes.length; index += chunkSize) {
+      binary += String.fromCharCode(
+        ...bytes.subarray(index, index + chunkSize)
+      );
+    }
+
+    payload.push({ name: file.name, data: btoa(binary) });
+  }
+
+  return payload;
+}
+
+export function parseUploadedImagesResponse(body: unknown): string[] {
+  if (
+    !isRecord(body) ||
+    body.success !== true ||
+    !isRecord(body.data) ||
+    !Array.isArray(body.data.images)
+  ) {
+    throw new VendorApiError(
+      "The server returned an unexpected image upload response.",
+      0,
+      "UNEXPECTED_RESPONSE"
+    );
+  }
+
+  const urls = body.data.images
+    .map((image: unknown) =>
+      isRecord(image) && typeof image.url === "string" ? image.url.trim() : ""
+    )
+    .filter(Boolean);
+
+  if (urls.length === 0) {
+    throw new VendorApiError(
+      "The image host did not return any usable URLs.",
+      0,
+      "UNEXPECTED_RESPONSE"
+    );
+  }
+
+  return urls;
+}
+
+export async function uploadServiceImages(
+  files: File[],
+  signal?: AbortSignal
+): Promise<string[]> {
+  const images = await toImageUploadPayload(files);
+
+  return (await requestVendorApi(
+    "/api/vendor/services/images",
+    {
+      method: "POST",
+      body: { images },
+      signal,
+      fallbackMessage: "Unable to upload these images right now.",
+    },
+    parseUploadedImagesResponse
+  )) as string[];
+}
+
 export function toCreateServiceInput(
   values: ServiceFormValues
 ): CreateVendorServiceInput {
@@ -424,7 +713,7 @@ export function toUpdateServiceInput(
 async function requestVendorApi(
   path: string,
   options: {
-    method: "GET" | "POST" | "PATCH";
+    method: "GET" | "POST" | "PATCH" | "DELETE";
     body?: unknown;
     signal?: AbortSignal;
     fallbackMessage: string;
@@ -545,4 +834,147 @@ export async function setVendorServiceActive(
     },
     parseVendorServiceResponse
   )) as VendorService;
+}
+
+export type VendorServiceQuery = {
+  q?: string;
+  category?: string;
+  approvalStatus?: VendorApprovalStatus;
+  isActive?: "all" | "true" | "false";
+  page?: number;
+  limit?: number;
+};
+
+export type VendorBookingQuery = {
+  status?: string;
+  serviceId?: string;
+  page?: number;
+  limit?: number;
+};
+
+function toQueryString(params: Record<string, string | number | undefined>) {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "") search.set(key, String(value));
+  }
+  const query = search.toString();
+  return query ? `?${query}` : "";
+}
+
+export async function getVendorServicesPage(
+  query: VendorServiceQuery = {},
+  signal?: AbortSignal
+) {
+  return (await requestVendorApi(
+    `/api/vendor/services${toQueryString(query)}`,
+    {
+      method: "GET",
+      signal,
+      fallbackMessage: "Unable to load your services right now.",
+    },
+    (body) => parsePaginatedResponse(body, parseVendorService, "Unable to load your services right now.")
+  )) as { items: VendorService[]; meta: PaginationMeta };
+}
+
+export async function getVendorService(
+  id: string,
+  signal?: AbortSignal
+): Promise<VendorService> {
+  return (await requestVendorApi(
+    `/api/vendor/services/${encodeURIComponent(id)}`,
+    {
+      method: "GET",
+      signal,
+      fallbackMessage: "Unable to load this service right now.",
+    },
+    parseVendorServiceResponse
+  )) as VendorService;
+}
+
+export async function deleteVendorService(id: string): Promise<void> {
+  await requestVendorApi(
+    `/api/vendor/services/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+      fallbackMessage: "Unable to delete this service right now.",
+    },
+    () => null
+  );
+}
+
+export async function getVendorBookings(
+  query: VendorBookingQuery = {},
+  signal?: AbortSignal
+) {
+  return (await requestVendorApi(
+    `/api/vendor/bookings${toQueryString(query)}`,
+    {
+      method: "GET",
+      signal,
+      fallbackMessage: "Unable to load booking requests right now.",
+    },
+    (body) => parsePaginatedResponse(body, parseVendorBookingView, "Unable to load booking requests right now.")
+  )) as { items: VendorBookingView[]; meta: PaginationMeta };
+}
+
+export async function getVendorBooking(
+  id: string,
+  signal?: AbortSignal
+): Promise<VendorBookingView> {
+  return (await requestVendorApi(
+    `/api/vendor/bookings/${encodeURIComponent(id)}`,
+    {
+      method: "GET",
+      signal,
+      fallbackMessage: "Unable to load this booking right now.",
+    },
+    (body) => {
+      if (!isRecord(body) || body.success !== true) {
+        throw new VendorApiError(
+          "The server returned an unexpected booking response.",
+          0,
+          "UNEXPECTED_RESPONSE"
+        );
+      }
+      return parseVendorBookingView(body.data);
+    }
+  )) as VendorBookingView;
+}
+
+export async function processVendorBooking(
+  id: string,
+  action: "accept" | "reject"
+): Promise<VendorBookingView> {
+  return (await requestVendorApi(
+    `/api/vendor/bookings/${encodeURIComponent(id)}/status`,
+    {
+      method: "PATCH",
+      body: { action },
+      fallbackMessage: "Unable to update this booking right now.",
+    },
+    (body) => {
+      if (!isRecord(body) || body.success !== true) {
+        throw new VendorApiError(
+          "The server returned an unexpected booking response.",
+          0,
+          "UNEXPECTED_RESPONSE"
+        );
+      }
+      return parseVendorBookingView(body.data);
+    }
+  )) as VendorBookingView;
+}
+
+export async function getVendorSubscription(
+  signal?: AbortSignal
+): Promise<VendorSubscriptionSummary> {
+  return (await requestVendorApi(
+    "/api/vendor/subscription",
+    {
+      method: "GET",
+      signal,
+      fallbackMessage: "Unable to load your subscription right now.",
+    },
+    parseVendorSubscriptionResponse
+  )) as VendorSubscriptionSummary;
 }

@@ -37,6 +37,18 @@ export default function OverviewStats({ stats, error }: OverviewStatsProps) {
       value: stats.totalBookings,
       hint: "Booking count across your services.",
     },
+    {
+      label: "Pending Requests",
+      icon: <Clock3 size={19} />,
+      value: stats.pendingBookingRequests ?? null,
+      hint: "Booking requests waiting for your response.",
+    },
+    {
+      label: "Accepted Bookings",
+      icon: <CalendarCheck size={19} />,
+      value: stats.acceptedBookings ?? null,
+      hint: "Requests you have accepted.",
+    },
   ];
 
   return (
@@ -64,7 +76,7 @@ export default function OverviewStats({ stats, error }: OverviewStatsProps) {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {cards.map((card) => (
           <StatCard key={card.label} {...card} />
         ))}

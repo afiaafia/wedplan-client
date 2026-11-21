@@ -12,10 +12,14 @@ import {
   parseVendorServicesResponse,
   setVendorServiceActive,
   toCreateServiceInput,
+  toImageUploadPayload,
   toUpdateServiceInput,
   updateVendorService,
+  uploadServiceImages,
   validateServiceForm,
   VendorApiError,
+  parseUploadedImagesResponse,
+  MAX_SERVICE_IMAGES,
   type ServiceFormValues,
 } from "../src/lib/vendor-api.ts";
 import {
@@ -121,6 +125,10 @@ test("dashboard statistics and records are parsed from the API response", () => 
     activeServices: 1,
     pendingApproval: 0,
     totalBookings: 3,
+    pendingBookingRequests: null,
+    acceptedBookings: null,
+    currentSubscriptionPlan: null,
+    activeServiceLimit: null,
   });
   assert.equal(overview.services[0]?.title, "Garden photography");
   assert.equal(overview.services[0]?.description, "Full-day wedding coverage");
@@ -458,4 +466,125 @@ test("deactivation after a downgrade is not blocked or automated by the client",
   return setVendorServiceActive(service.id, false).then(() => {
     assert.equal(isActiveServiceLimitReached(4, "free"), true);
   });
+});
+
+const PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9kAAAAASUVORK5CYII=";
+
+function pngFile(name: string): File {
+  return new File([Buffer.from(PNG_BASE64, "base64")], name, {
+    type: "image/png",
+  });
+}
+
+test("selected image files are encoded for the ImgBB upload endpoint", async () => {
+  const payload = await toImageUploadPayload([
+    pngFile("one.png"),
+    pngFile("two.png"),
+  ]);
+
+  assert.deepEqual(payload, [
+    { name: "one.png", data: PNG_BASE64 },
+    { name: "two.png", data: PNG_BASE64 },
+  ]);
+});
+
+test("invalid image selections are rejected before calling the API", async () => {
+  await assert.rejects(
+    toImageUploadPayload([]),
+    (error: unknown) =>
+      error instanceof VendorApiError && error.code === "VALIDATION_ERROR"
+  );
+
+  await assert.rejects(
+    toImageUploadPayload([
+      new File([Buffer.from("not an image")], "notes.txt", {
+        type: "text/plain",
+      }),
+    ]),
+    (error: unknown) =>
+      error instanceof VendorApiError && error.code === "VALIDATION_ERROR"
+  );
+
+  const tooMany = Array.from({ length: MAX_SERVICE_IMAGES + 1 }, (_, index) =>
+    pngFile(`${index}.png`)
+  );
+  await assert.rejects(
+    toImageUploadPayload(tooMany),
+    (error: unknown) =>
+      error instanceof VendorApiError && error.code === "VALIDATION_ERROR"
+  );
+});
+
+test("uploaded image URLs are returned for storage in MongoDB", (t) => {
+  const requests = stubFetch(t, () => ({
+    status: 200,
+    body: {
+      success: true,
+      data: {
+        images: [
+          { url: "https://i.imgbb.com/one.png" },
+          { url: "https://i.imgbb.com/two.png" },
+        ],
+      },
+    },
+  }));
+
+  return uploadServiceImages([pngFile("one.png"), pngFile("two.png")]).then(
+    (urls) => {
+      assert.deepEqual(urls, [
+        "https://i.imgbb.com/one.png",
+        "https://i.imgbb.com/two.png",
+      ]);
+      assert.equal(
+        requests[0]?.url,
+        "http://localhost:5000/api/vendor/services/images"
+      );
+      assert.equal(requests[0]?.init?.method, "POST");
+      assert.equal(requests[0]?.init?.credentials, "include");
+      const body = JSON.parse(String(requests[0]?.init?.body)) as {
+        images: { name: string; data: string }[];
+      };
+      assert.equal(body.images.length, 2);
+      assert.equal(body.images[0]?.data, PNG_BASE64);
+    }
+  );
+});
+
+test("image upload responses must contain real hosted URLs", () => {
+  assert.deepEqual(
+    parseUploadedImagesResponse({
+      success: true,
+      data: { images: [{ url: " https://i.imgbb.com/one.png " }] },
+    }),
+    ["https://i.imgbb.com/one.png"]
+  );
+
+  for (const body of [
+    { success: true, data: { images: [] } },
+    { success: true, data: { images: [{ url: 42 }] } },
+    { success: false, data: { images: [{ url: "https://i.imgbb.com/x" }] } },
+  ]) {
+    assert.throws(
+      () => parseUploadedImagesResponse(body),
+      (error: unknown) =>
+        error instanceof VendorApiError &&
+        error.code === "UNEXPECTED_RESPONSE"
+    );
+  }
+});
+
+test("image upload errors give actionable fallback guidance", () => {
+  assert.match(
+    messageForVendorApiError(
+      new VendorApiError("missing key", 500, "IMAGE_UPLOAD_UNAVAILABLE")
+    ),
+    /hosted image URLs manually/i
+  );
+  assert.match(
+    messageForVendorApiError(
+      new VendorApiError("failed", 502, "IMAGE_UPLOAD_FAILED")
+    ),
+    /try again/i
+  );
 });

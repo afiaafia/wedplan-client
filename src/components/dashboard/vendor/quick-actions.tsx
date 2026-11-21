@@ -32,6 +32,7 @@ const actions: QuickAction[] = [
     title: "Business Profile",
     description: "Manage the details couples see about you.",
     icon: <Building2 size={18} />,
+    href: "/settings",
   },
   {
     title: "View Public Services",

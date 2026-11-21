@@ -11,6 +11,8 @@ export type VendorService = {
   price: number;
   images: string[];
   approvalStatus: VendorApprovalStatus;
+  rejectionReason?: string;
+  vendorName?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -27,11 +29,67 @@ export type VendorBooking = {
   createdAt: string;
 };
 
+export type BookingPerson = {
+  id: string;
+  name: string;
+  image?: string;
+  businessName?: string;
+};
+
+export type VendorBookingView = VendorBooking & {
+  serviceTitle: string;
+  customer: BookingPerson;
+  updatedAt: string;
+};
+
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
+
+export type VendorSubscriptionStatus =
+  | "active"
+  | "expired"
+  | "pending"
+  | "failed"
+  | "cancelled"
+  | "none";
+
+export type VendorTransactionSummary = {
+  id: string;
+  status: string;
+  amount: number;
+  currency: string;
+  createdAt: string;
+  stripeSessionId?: string;
+};
+
+export type VendorSubscriptionSummary = {
+  plan: "free" | "premium";
+  storedPlan: "free" | "premium" | "unknown";
+  status: VendorSubscriptionStatus;
+  startedAt: string | null;
+  expiresAt: string | null;
+  activeServices: number;
+  activeServiceLimit: number | null;
+  checkoutAvailable: boolean;
+  price: { amount: number; currency: string; interval: string } | null;
+  recentTransactions: VendorTransactionSummary[];
+};
+
 export type VendorOverviewStats = {
   totalServices: number | null;
   activeServices: number | null;
   pendingApproval: number | null;
   totalBookings: number | null;
+  pendingBookingRequests?: number | null;
+  acceptedBookings?: number | null;
+  currentSubscriptionPlan?: "free" | "premium" | null;
+  activeServiceLimit?: number | null;
 };
 
 export type VendorOverview = {
@@ -58,6 +116,10 @@ export const EMPTY_VENDOR_OVERVIEW: VendorOverview = {
     activeServices: null,
     pendingApproval: null,
     totalBookings: null,
+    pendingBookingRequests: null,
+    acceptedBookings: null,
+    currentSubscriptionPlan: null,
+    activeServiceLimit: null,
   },
   services: [],
   bookings: [],
