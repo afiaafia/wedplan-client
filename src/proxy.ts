@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerApiBaseUrl } from "@/lib/api-url";
 import { getSafeRedirectPath } from "@/lib/redirect-path";
-import { getRoleDashboard, normalizeRole } from "@/lib/roles";
+import {
+  getRoleDashboard,
+  normalizeRole,
+  type UserRole,
+} from "@/lib/roles";
+import {
+  isProtectedAppPath,
+  isRouteAllowedForRole,
+} from "@/lib/route-access";
 import { hasValidSessionExpiry } from "@/lib/session-expiry";
 
-const PROTECTED_PATHS = ["/dashboard"];
 const AUTH_PATHS = ["/sign-in", "/sign-up", "/vendor/sign-in"];
 const ROLE_DASHBOARDS = [
   getRoleDashboard("customer"),
@@ -18,17 +25,16 @@ type ProxySession = {
   };
   user: {
     role?: unknown;
+    isBlocked?: unknown;
   };
 };
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isProtected = PROTECTED_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
+  const isProtected = isProtectedAppPath(pathname);
   const isAuthPath = AUTH_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
 
   if (!isProtected && !isAuthPath) {
@@ -36,8 +42,11 @@ export async function proxy(request: NextRequest) {
   }
 
   const session = await validateSession(request);
-  const role = session ? normalizeRole(session.user.role) : null;
+  const role: UserRole | null = session
+    ? normalizeRole(session.user.role)
+    : null;
   const roleDashboard = role ? getRoleDashboard(role) : null;
+  const isBlocked = session?.user.isBlocked === true;
 
   if (isProtected && !session) {
     const signInUrl = new URL("/sign-in", request.url);
@@ -45,16 +54,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  if (
-    isProtected &&
-    roleDashboard &&
-    isRoleDashboardPath(pathname) &&
-    !pathname.startsWith(roleDashboard)
-  ) {
-    return NextResponse.redirect(new URL(roleDashboard, request.url));
+  if (isProtected && isBlocked) {
+    return NextResponse.redirect(new URL("/blocked", request.url));
   }
 
-  if (isAuthPath && session && roleDashboard) {
+  if (isProtected && role && !isRouteAllowedForRole(pathname, role)) {
+    return NextResponse.redirect(
+      new URL(roleDashboard ?? getRoleDashboard(role), request.url)
+    );
+  }
+
+  if (isAuthPath && session && !isBlocked && roleDashboard && role) {
     const requestedPath = getSafeRedirectPath(
       request.nextUrl.searchParams.get("redirect"),
       request.url
@@ -62,11 +72,15 @@ export async function proxy(request: NextRequest) {
     const target =
       requestedPath &&
       (!isRoleDashboardPath(requestedPath) ||
-        requestedPath.startsWith(roleDashboard))
+        isRouteAllowedForRole(requestedPath, role))
         ? requestedPath
         : roleDashboard;
 
     return NextResponse.redirect(new URL(target, request.url));
+  }
+
+  if (isAuthPath && isBlocked) {
+    return NextResponse.redirect(new URL("/blocked", request.url));
   }
 
   return NextResponse.next();
@@ -74,11 +88,13 @@ export async function proxy(request: NextRequest) {
 
 function isRoleDashboardPath(path: string): boolean {
   return ROLE_DASHBOARDS.some(
-    (base) => path === base || path.startsWith(base + "/")
+    (base) => path === base || path.startsWith(`${base}/`)
   );
 }
 
-async function validateSession(request: NextRequest): Promise<ProxySession | null> {
+async function validateSession(
+  request: NextRequest
+): Promise<ProxySession | null> {
   const backendUrl = getServerApiBaseUrl();
 
   try {
@@ -90,6 +106,7 @@ async function validateSession(request: NextRequest): Promise<ProxySession | nul
         Cookie: cookieHeader,
         "Content-Type": "application/json",
       },
+      cache: "no-store",
     });
 
     if (!response.ok) return null;
@@ -105,5 +122,11 @@ async function validateSession(request: NextRequest): Promise<ProxySession | nul
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/sign-in", "/sign-up", "/vendor/sign-in"],
+  matcher: [
+    "/dashboard/:path*",
+    "/settings",
+    "/sign-in",
+    "/sign-up",
+    "/vendor/sign-in",
+  ],
 };
