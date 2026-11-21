@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
+import MotionProvider from "@/components/motion-provider";
+import ToastProvider from "@/components/layout/toast-provider";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -32,8 +35,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
       <body className="min-h-screen antialiased">
-        <Navbar />
-        {children}
+        <ToastProvider>
+          <MotionProvider>
+            <Navbar />
+            {children}
+            <Footer />
+          </MotionProvider>
+        </ToastProvider>
       </body>
     </html>
   );
