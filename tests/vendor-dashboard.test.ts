@@ -9,6 +9,12 @@ import {
   getFirstName,
   getInitials,
 } from "../src/lib/vendor-dashboard.ts";
+import {
+  formatServiceUsage,
+  getServiceLimit,
+  isValidStripeCheckoutUrl,
+  resolveVendorPlan,
+} from "../src/lib/subscription.ts";
 
 test("empty vendor overview contains no fabricated figures", () => {
   assert.deepEqual(EMPTY_VENDOR_OVERVIEW.services, []);
@@ -43,4 +49,39 @@ test("status labels normalize known booking states", () => {
   assert.equal(formatBookingStatus("accepted"), "Accepted");
   assert.equal(formatBookingStatus("PENDING"), "Pending");
   assert.equal(formatBookingStatus(""), "Unknown");
+});
+
+test("subscription plan resolution only trusts premium with a valid expiry", () => {
+  assert.equal(resolveVendorPlan("premium"), "premium");
+  assert.equal(resolveVendorPlan("free"), "free");
+  assert.equal(resolveVendorPlan(undefined), "free");
+  assert.equal(
+    resolveVendorPlan("premium", "2020-01-01T00:00:00.000Z"),
+    "free"
+  );
+  assert.equal(
+    resolveVendorPlan("premium", "2999-01-01T00:00:00.000Z"),
+    "premium"
+  );
+});
+
+test("service limits and usage follow the resolved plan", () => {
+  assert.equal(getServiceLimit("free"), 3);
+  assert.equal(getServiceLimit("premium"), null);
+  assert.equal(
+    formatServiceUsage(2, "free"),
+    "2 of 3 active services used · 1 remaining"
+  );
+  assert.equal(formatServiceUsage(7, "premium"), "7 active services");
+  assert.equal(formatServiceUsage(null, "free"), "Usage unavailable");
+});
+
+test("checkout URLs must be HTTPS Stripe Checkout URLs", () => {
+  assert.equal(
+    isValidStripeCheckoutUrl("https://checkout.stripe.com/c/pay/cs_test_123"),
+    true
+  );
+  assert.equal(isValidStripeCheckoutUrl("https://example.com/checkout"), false);
+  assert.equal(isValidStripeCheckoutUrl("javascript:alert(1)"), false);
+  assert.equal(isValidStripeCheckoutUrl(""), false);
 });

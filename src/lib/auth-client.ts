@@ -10,6 +10,19 @@ export const authClient = createAuthClient({
           type: ["customer", "vendor", "admin"],
           input: false,
         },
+        isBlocked: {
+          type: "boolean",
+          input: false,
+        },
+        subscriptionPlan: {
+          type: ["free", "premium"],
+          input: false,
+        },
+        subscriptionExpiresAt: {
+          type: "date",
+          required: false,
+          input: false,
+        },
       },
     }),
   ],

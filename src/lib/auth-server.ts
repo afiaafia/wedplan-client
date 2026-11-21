@@ -2,6 +2,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getRoleDashboard, normalizeRole, type UserRole } from "@/lib/roles";
+import type { VendorPlan } from "@/lib/subscription";
 
 export type SessionUser = {
   id: string;
@@ -10,6 +11,9 @@ export type SessionUser = {
   image?: string | null;
   businessName?: string | null;
   role: UserRole;
+  isBlocked?: boolean;
+  subscriptionPlan?: VendorPlan | null;
+  subscriptionExpiresAt?: string | null;
   emailVerified: boolean;
   createdAt: string;
   updatedAt: string;

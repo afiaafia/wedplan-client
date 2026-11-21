@@ -4,7 +4,10 @@ import MyServices from "./my-services";
 import OverviewStats from "./overview-stats";
 import QuickActions from "./quick-actions";
 import RecentBookings from "./recent-bookings";
+import SubscriptionCard from "./subscription-card";
 import VendorSidebar from "./vendor-sidebar";
+import type { UserRole } from "@/lib/roles";
+import type { VendorPlan } from "@/lib/subscription";
 import type { VendorOverview } from "@/lib/vendor-dashboard";
 
 type VendorDashboardProps = {
@@ -14,12 +17,18 @@ type VendorDashboardProps = {
     image?: string | null;
     businessName?: string | null;
   };
+  role: UserRole;
+  plan: VendorPlan;
+  redirectStatus: "success" | "cancelled" | null;
   currentDate: string;
   overview: VendorOverview;
 };
 
 export default function VendorDashboard({
   user,
+  role,
+  plan,
+  redirectStatus,
   currentDate,
   overview,
 }: VendorDashboardProps) {
@@ -48,6 +57,12 @@ export default function VendorDashboard({
               </div>
 
               <div className="space-y-6">
+                <SubscriptionCard
+                  role={role}
+                  plan={plan}
+                  activeServices={overview.stats.activeServices}
+                  redirectStatus={redirectStatus}
+                />
                 <QuickActions />
                 <BusinessSummary
                   name={user.name}
