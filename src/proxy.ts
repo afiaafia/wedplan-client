@@ -3,12 +3,13 @@ import { getServerApiBaseUrl } from "@/lib/api-url";
 import { getSafeRedirectPath } from "@/lib/redirect-path";
 import {
   getRoleDashboard,
+  normalizeRoles,
   normalizeRole,
   type UserRole,
 } from "@/lib/roles";
 import {
   isProtectedAppPath,
-  isRouteAllowedForRole,
+  isRouteAllowedForRoles,
 } from "@/lib/route-access";
 import { hasValidSessionExpiry } from "@/lib/session-expiry";
 
@@ -25,6 +26,7 @@ type ProxySession = {
   };
   user: {
     role?: unknown;
+    roles?: unknown;
     isBlocked?: unknown;
   };
 };
@@ -42,6 +44,9 @@ export async function proxy(request: NextRequest) {
   }
 
   const session = await validateSession(request);
+  const roles = session
+    ? normalizeRoles(session.user.roles, session.user.role)
+    : [];
   const role: UserRole | null = session
     ? normalizeRole(session.user.role)
     : null;
@@ -58,13 +63,29 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/blocked", request.url));
   }
 
-  if (isProtected && role && !isRouteAllowedForRole(pathname, role)) {
+  if (isProtected && roles.length > 0 && !isRouteAllowedForRoles(pathname, roles)) {
     return NextResponse.redirect(
       new URL(roleDashboard ?? getRoleDashboard(role), request.url)
     );
   }
 
-  if (isAuthPath && session && !isBlocked && roleDashboard && role) {
+  const authDashboardRole =
+    pathname === "/vendor/sign-in" && roles.includes("vendor")
+      ? "vendor"
+      : role;
+  const authDashboard = authDashboardRole
+    ? getRoleDashboard(authDashboardRole)
+    : null;
+  const defaultAuthTarget =
+    pathname === "/sign-up" &&
+    request.nextUrl.searchParams.get("role") === "vendor" &&
+    roles.includes("customer")
+      ? roles.includes("vendor")
+        ? getRoleDashboard("vendor")
+        : "/vendor/onboarding"
+      : authDashboard;
+
+  if (isAuthPath && session && !isBlocked && defaultAuthTarget && authDashboardRole) {
     const requestedPath = getSafeRedirectPath(
       request.nextUrl.searchParams.get("redirect"),
       request.url
@@ -72,9 +93,9 @@ export async function proxy(request: NextRequest) {
     const target =
       requestedPath &&
       (!isRoleDashboardPath(requestedPath) ||
-        isRouteAllowedForRole(requestedPath, role))
+        isRouteAllowedForRoles(requestedPath, roles))
         ? requestedPath
-        : roleDashboard;
+        : defaultAuthTarget;
 
     return NextResponse.redirect(new URL(target, request.url));
   }
@@ -114,6 +135,12 @@ async function validateSession(
     const data: ProxySession | null = await response.json();
     if (!data?.user) return null;
     if (!hasValidSessionExpiry(data.session?.expiresAt)) return null;
+    if (
+      Array.isArray(data.user.roles) &&
+      normalizeRoles(data.user.roles, data.user.role).length === 0
+    ) {
+      return null;
+    }
 
     return data;
   } catch {
@@ -124,6 +151,7 @@ async function validateSession(
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/vendor/onboarding/:path*",
     "/settings",
     "/sign-in",
     "/sign-up",

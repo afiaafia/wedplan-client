@@ -1,6 +1,6 @@
 export const AUTH_ERROR_MESSAGES: Record<string, string> = {
   not_vendor:
-    "This Google account is registered as a Customer, not a Vendor. Sign in with a Vendor account; roles do not change during Google sign-in.",
+    "This account does not have Vendor access yet. Sign in as a Customer and activate Vendor access from your dashboard.",
   session_missing: "We could not verify your session. Please try again.",
   blocked: "This account has been blocked. Please contact support.",
   access_denied: "Google sign-in was cancelled. Please try again if you wish to continue.",

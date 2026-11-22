@@ -20,6 +20,30 @@ export function normalizeRole(value: unknown): UserRole {
   return isUserRole(value) ? value : DEFAULT_ROLE;
 }
 
+export function normalizeRoles(value: unknown, legacyRole?: unknown): UserRole[] {
+  if (Array.isArray(value)) {
+    return [
+      ...new Set(
+        value.filter(
+          (role): role is UserRole =>
+            typeof role === "string" &&
+            (USER_ROLES as readonly string[]).includes(role)
+        )
+      ),
+    ];
+  }
+
+  return [normalizeRole(legacyRole)];
+}
+
+export function hasRole(
+  roles: unknown,
+  role: UserRole,
+  legacyRole?: unknown
+): boolean {
+  return normalizeRoles(roles, legacyRole).includes(role);
+}
+
 export function getRoleDashboard(value: unknown): string {
   switch (normalizeRole(value)) {
     case "vendor":

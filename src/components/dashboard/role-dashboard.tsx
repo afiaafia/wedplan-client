@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 import type { SessionUser } from "@/lib/auth-server";
-import { normalizeRole } from "@/lib/roles";
+import { normalizeRole, normalizeRoles } from "@/lib/roles";
 
 const roleLabels = {
   customer: "Couple",
@@ -34,6 +34,7 @@ export function RoleDashboard({
   cards,
 }: RoleDashboardProps) {
   const role = normalizeRole(user.role);
+  const roles = normalizeRoles(user.roles, user.role);
   const initials =
     user.name
       ?.split(" ")
@@ -92,7 +93,9 @@ export function RoleDashboard({
           Signed in as{" "}
           <span className="font-semibold text-foreground">{user.email}</span>
           &nbsp;·&nbsp;
-          <span className="font-semibold text-primary">{roleLabels[role]}</span>
+          <span className="font-semibold text-primary">
+            {roles.map((userRole) => roleLabels[userRole]).join(" · ") || roleLabels[role]}
+          </span>
         </div>
       </div>
     </main>

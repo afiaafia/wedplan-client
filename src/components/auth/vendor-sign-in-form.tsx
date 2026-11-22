@@ -21,7 +21,7 @@ import {
   isAllowedPostAuthDestination,
   isAllowedPostAuthRedirect,
 } from "@/lib/route-access";
-import { getRoleDashboard, normalizeRole, type UserRole } from "@/lib/roles";
+import { getRoleDashboard, normalizeRoles } from "@/lib/roles";
 import {
   finishGoogleOAuthFlow,
   startGoogleOAuthFlow,
@@ -63,8 +63,6 @@ function GoogleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-
-const ALLOWED_VENDOR_ROLES: readonly UserRole[] = ["vendor"];
 
 export default function VendorSignInForm() {
   const router = useRouter();
@@ -117,14 +115,14 @@ export default function VendorSignInForm() {
       return;
     }
 
-    const normalizedRole = normalizeRole(user.role);
+    const userRoles = normalizeRoles(user.roles, user.role);
 
-    if (!ALLOWED_VENDOR_ROLES.includes(normalizedRole)) {
+    if (!userRoles.includes("vendor")) {
       await signOut();
       setRoleMismatch(true);
       const mismatchMessage =
-        normalizedRole === "customer"
-          ? "This account is a customer account. Please use Customer Sign In."
+        userRoles.includes("customer")
+          ? "This account does not have Vendor access yet. Sign in as a Customer and complete Vendor onboarding."
           : "This account is not authorized to access the Vendor Dashboard.";
       setFormError(mismatchMessage);
       showToast({
@@ -143,9 +141,9 @@ export default function VendorSignInForm() {
     );
 
     const target =
-      requestedPath && isAllowedPostAuthRedirect(requestedPath, normalizedRole)
+      requestedPath && isAllowedPostAuthRedirect(requestedPath, "vendor")
         ? requestedPath
-        : getRoleDashboard(normalizedRole);
+        : getRoleDashboard("vendor");
 
     showToast({
       title: "Signed in",
@@ -520,6 +518,16 @@ export default function VendorSignInForm() {
               className="font-semibold text-primary transition-colors hover:text-primary-hover hover:underline underline-offset-2"
             >
               Become a Vendor
+            </Link>
+          </p>
+
+          <p>
+            Already have a Customer account?{" "}
+            <Link
+              href="/sign-in"
+              className="font-semibold text-primary transition-colors hover:text-primary-hover hover:underline underline-offset-2"
+            >
+              Sign in and activate Vendor access
             </Link>
           </p>
 

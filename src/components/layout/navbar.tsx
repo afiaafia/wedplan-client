@@ -14,7 +14,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ThemeToggle from "./theme-toggle";
 import { useSession } from "@/lib/auth-client";
 import { useLogout } from "@/lib/use-logout";
-import { getRoleDashboard } from "@/lib/roles";
+import { getRoleDashboard, normalizeRole, normalizeRoles } from "@/lib/roles";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -42,6 +42,7 @@ export default function Navbar() {
   const profileButtonRef = useRef<HTMLButtonElement>(null);
 
   const user = session?.user;
+  const roles = normalizeRoles(user?.roles, user?.role);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -100,7 +101,13 @@ export default function Navbar() {
   }, [profileOpen]);
 
   const isAuthenticated = !!user;
-  const dashboardHref = getRoleDashboard(user?.role);
+  const activeRole =
+    roles.find(
+      (role) =>
+        pathname === getRoleDashboard(role) ||
+        pathname.startsWith(`${getRoleDashboard(role)}/`)
+    ) ?? normalizeRole(user?.role);
+  const dashboardHref = getRoleDashboard(activeRole);
 
   const initials =
     user?.name
@@ -320,7 +327,7 @@ export default function Navbar() {
                         {user.email}
                       </p>
                       <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                        {user.role || "customer"}
+                        {roles.join(" · ")}
                       </p>
                     </div>
 

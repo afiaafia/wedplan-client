@@ -11,6 +11,7 @@ const ROUTE_RULES: readonly AccessRule[] = [
   { prefix: "/dashboard/customer", roles: ["customer"] },
   { prefix: "/dashboard/vendor", roles: ["vendor"] },
   { prefix: "/dashboard/admin", roles: ["admin"] },
+  { prefix: "/vendor/onboarding", roles: ["customer", "vendor"] },
   { prefix: "/settings", roles: ALL_ROLES },
   { prefix: "/dashboard", roles: ALL_ROLES },
 ];
@@ -33,6 +34,18 @@ export function isRouteAllowedForRole(
   return rule ? rule.roles.includes(role) : true;
 }
 
+export function isRouteAllowedForRoles(
+  pathname: string,
+  roles: readonly UserRole[]
+): boolean {
+  const rule = ROUTE_RULES.find(
+    (candidate) =>
+      pathname === candidate.prefix || pathname.startsWith(`${candidate.prefix}/`)
+  );
+
+  return rule ? rule.roles.some((role) => roles.includes(role)) : true;
+}
+
 const PUBLIC_SERVICE_PATH = /^\/services(?:\/[^/]+)?\/?$/;
 
 export function isAllowedPostAuthDestination(path: string): boolean {
@@ -48,6 +61,19 @@ export function isAllowedPostAuthRedirect(
 
   if (isProtectedAppPath(pathname)) {
     return isRouteAllowedForRole(pathname, role);
+  }
+
+  return PUBLIC_SERVICE_PATH.test(pathname);
+}
+
+export function isAllowedPostAuthRedirectForRoles(
+  path: string,
+  roles: readonly UserRole[]
+): boolean {
+  const pathname = path.split(/[?#]/, 1)[0] ?? path;
+
+  if (isProtectedAppPath(pathname)) {
+    return isRouteAllowedForRoles(pathname, roles);
   }
 
   return PUBLIC_SERVICE_PATH.test(pathname);

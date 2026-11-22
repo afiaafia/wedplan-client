@@ -1,29 +1,47 @@
 import Link from "next/link";
-import { ArrowUpRight, CalendarPlus, ClipboardList, UserRound } from "lucide-react";
+import {
+  ArrowUpRight,
+  Briefcase,
+  CalendarPlus,
+  ClipboardList,
+  UserRound,
+} from "lucide-react";
 import DashboardSection from "@/components/dashboard/vendor/dashboard-section";
 
-const actions = [
-  {
-    title: "Browse services",
-    description: "Find photographers, florists, venues, and more.",
-    href: "/services",
-    icon: <CalendarPlus size={19} />,
-  },
-  {
-    title: "My bookings",
-    description: "Review every request and its current status.",
-    href: "/dashboard/customer/bookings",
-    icon: <ClipboardList size={19} />,
-  },
-  {
-    title: "Profile settings",
-    description: "Update your name and profile photo.",
-    href: "/dashboard/customer/settings",
-    icon: <UserRound size={19} />,
-  },
-];
+export default function CustomerQuickActions({
+  hasVendorAccess,
+}: {
+  hasVendorAccess: boolean;
+}) {
+  const actions = [
+    {
+      title: "Browse services",
+      description: "Find photographers, florists, venues, and more.",
+      href: "/services",
+      icon: <CalendarPlus size={19} />,
+    },
+    {
+      title: "My bookings",
+      description: "Review every request and its current status.",
+      href: "/dashboard/customer/bookings",
+      icon: <ClipboardList size={19} />,
+    },
+    {
+      title: "Profile settings",
+      description: "Update your name and profile photo.",
+      href: "/dashboard/customer/settings",
+      icon: <UserRound size={19} />,
+    },
+    {
+      title: hasVendorAccess ? "Vendor dashboard" : "Become a Vendor",
+      description: hasVendorAccess
+        ? "Manage your services and bookings."
+        : "Activate Vendor access for this account.",
+      href: hasVendorAccess ? "/dashboard/vendor" : "/vendor/onboarding",
+      icon: <Briefcase size={19} />,
+    },
+  ];
 
-export default function CustomerQuickActions() {
   return (
     <DashboardSection
       icon={<ClipboardList size={19} />}

@@ -2,7 +2,12 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getServerApiBaseUrl } from "@/lib/api-url";
-import { getRoleDashboard, normalizeRole, type UserRole } from "@/lib/roles";
+import {
+  getRoleDashboard,
+  normalizeRole,
+  normalizeRoles,
+  type UserRole,
+} from "@/lib/roles";
 import { hasValidSessionExpiry } from "@/lib/session-expiry";
 import type { VendorPlan } from "@/lib/subscription";
 
@@ -13,6 +18,7 @@ export type SessionUser = {
   image?: string | null;
   businessName?: string | null;
   role: UserRole;
+  roles?: UserRole[];
   isBlocked?: boolean;
   subscriptionPlan?: VendorPlan | null;
   subscriptionExpiresAt?: string | null;
@@ -66,6 +72,13 @@ export async function getServerSession(): Promise<SessionData | null> {
       return null;
     }
 
+    if (
+      Array.isArray(data.user.roles) &&
+      normalizeRoles(data.user.roles, data.user.role).length === 0
+    ) {
+      return null;
+    }
+
     return data;
   } catch {
     return null;
@@ -97,10 +110,11 @@ export async function requireRole(allowedRoles: readonly UserRole[]): Promise<{
   role: UserRole;
 }> {
   const session = await requireSession();
-  const role = normalizeRole(session.user.role);
+  const roles = normalizeRoles(session.user.roles, session.user.role);
+  const role = allowedRoles.find((allowedRole) => roles.includes(allowedRole));
 
-  if (!allowedRoles.includes(role)) {
-    redirect(getRoleDashboard(role));
+  if (!role) {
+    redirect(getRoleDashboard(normalizeRole(session.user.role)));
   }
 
   return { session, user: session.user, role };

@@ -29,6 +29,7 @@ import {
   getRoleDashboard,
   isRegistrationRole,
   normalizeRole,
+  normalizeRoles,
   REGISTRATION_ROLES,
   type RegistrationRole,
   type UserRole,
@@ -86,9 +87,11 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
   const { showToast } = useToast();
   const isSignUp = mode === "sign-up";
   const isVendorSignIn = !isSignUp && audience === "vendor";
-  const allowedRoles: readonly UserRole[] | null = isVendorSignIn
-    ? ["vendor", "admin"]
-    : null;
+  const allowedRoles: readonly UserRole[] | null = isSignUp
+    ? null
+    : audience === "vendor"
+      ? ["vendor"]
+      : ["customer"];
 
   const roleParam = searchParams.get("role");
   const [role, setRole] = useState<RegistrationRole>(() =>
@@ -116,20 +119,24 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
 
   async function redirectAfterAuth() {
     const result = await getSession();
-    const sessionRole = result.data?.user?.role;
-    const normalizedRole = normalizeRole(sessionRole);
+    const user = result.data?.user;
+    const userRoles = normalizeRoles(user?.roles, user?.role);
+    const requestedRole = isSignUp
+      ? role
+      : allowedRoles?.find((candidate) => userRoles.includes(candidate));
 
-    if (allowedRoles && !allowedRoles.includes(normalizedRole)) {
+    if (allowedRoles && !requestedRole) {
       await signOut();
       setRoleMismatch(true);
       setFormError(
-        normalizedRole === "customer"
-          ? "This account is a customer account. Please use Customer Sign In."
-          : "This account cannot access the vendor dashboard."
+        audience === "vendor"
+          ? "This account does not have Vendor access yet. Sign in as a Customer and complete Vendor onboarding."
+          : "This account does not have Customer access. Please use Vendor Sign In."
       );
       return;
     }
 
+    const activeRole = requestedRole ?? normalizeRole(user?.role);
     const requestedPath = getSafeRedirectPath(
       searchParams.get("redirect"),
       typeof window !== "undefined"
@@ -137,13 +144,13 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
         : "http://localhost:3000"
     );
     const target =
-      requestedPath && isAllowedPostAuthRedirect(requestedPath, normalizedRole)
+      requestedPath && isAllowedPostAuthRedirect(requestedPath, activeRole)
         ? requestedPath
-        : getRoleDashboard(normalizedRole);
+        : getRoleDashboard(activeRole);
 
     showToast({
       title: isSignUp ? "Account created" : "Signed in",
-      description: `Welcome${result.data?.user?.name ? `, ${result.data.user.name}` : ""}.`,
+      description: `Welcome${user?.name ? `, ${user.name}` : ""}.`,
       variant: "success",
     });
 

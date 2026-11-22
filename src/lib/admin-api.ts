@@ -23,6 +23,7 @@ export type AdminDashboardData = {
     email: string;
     image?: string;
     role: "customer" | "vendor" | "admin";
+    roles: Array<"customer" | "vendor" | "admin">;
     createdAt: string;
   }>;
   recentServices: Array<{
@@ -59,6 +60,7 @@ export type AdminUser = {
   image?: string;
   businessName?: string;
   role: "customer" | "vendor" | "admin";
+  roles: Array<"customer" | "vendor" | "admin">;
   isBlocked: boolean;
   subscriptionPlan: "free" | "premium";
   createdAt: string;
@@ -195,6 +197,15 @@ export function parseAdminUser(value: unknown): AdminUser {
     throw new AdminApiError("Unexpected user record.");
   }
   const role = value.role;
+  const roles = Array.isArray(value.roles)
+    ? value.roles.filter(
+        (item): item is "customer" | "vendor" | "admin" =>
+          item === "customer" || item === "vendor" || item === "admin"
+      )
+    : [];
+  if (roles.length === 0) {
+    roles.push(role === "vendor" || role === "admin" ? role : "customer");
+  }
   return {
     id: value.id,
     name: text(value.name, "Unknown user"),
@@ -204,6 +215,7 @@ export function parseAdminUser(value: unknown): AdminUser {
       ? { businessName: value.businessName }
       : {}),
     role: role === "vendor" || role === "admin" ? role : "customer",
+    roles,
     isBlocked: value.isBlocked === true,
     subscriptionPlan: value.subscriptionPlan === "premium" ? "premium" : "free",
     createdAt: text(value.createdAt),

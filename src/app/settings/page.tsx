@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, UserRound } from "lucide-react";
 import { requireSession } from "@/lib/auth-server";
 import ProfileSettingsForm from "@/components/settings/profile-settings-form";
+import { hasRole, normalizeRole } from "@/lib/roles";
 
 export const instant = false;
 
@@ -15,7 +16,11 @@ export const metadata: Metadata = {
 export default async function SettingsPage() {
   const { user } = await requireSession("/settings");
 
-  if (user.role === "customer") {
+  const profileRole = hasRole(user.roles, "vendor", user.role)
+    ? "vendor"
+    : normalizeRole(user.role);
+
+  if (profileRole === "customer") {
     redirect("/dashboard/customer/settings");
   }
 
@@ -39,7 +44,7 @@ export default async function SettingsPage() {
               Profile Settings
             </h1>
             <p className="mt-1 text-sm text-muted">
-              {user.email} &middot; {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              {user.email} &middot; {profileRole.charAt(0).toUpperCase() + profileRole.slice(1)}
             </p>
           </div>
         </div>
@@ -49,7 +54,7 @@ export default async function SettingsPage() {
             initialName={user.name}
             initialBusinessName={user.businessName ?? ""}
             initialImage={user.image ?? null}
-            role={user.role}
+            role={profileRole}
           />
         </div>
       </div>

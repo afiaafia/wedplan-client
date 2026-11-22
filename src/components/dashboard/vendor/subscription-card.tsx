@@ -13,7 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { getSession } from "@/lib/auth-client";
-import { normalizeRole, type UserRole } from "@/lib/roles";
+import { hasRole, type UserRole } from "@/lib/roles";
 import {
   formatServiceUsage,
   FREE_PLAN_LIMIT_MESSAGE,
@@ -53,6 +53,7 @@ type SubscriptionCardProps = {
 type SessionSnapshot = {
   user?: {
     role?: unknown;
+    roles?: unknown;
     subscriptionPlan?: unknown;
     subscriptionExpiresAt?: unknown;
   };
@@ -166,7 +167,7 @@ export default function SubscriptionCard({
 
         const user = snapshot.user;
 
-        if (normalizeRole(user?.role) !== "vendor") {
+        if (!hasRole(user?.roles, "vendor", user?.role)) {
           setFeedback({
             tone: "error",
             title: "Vendor access required",

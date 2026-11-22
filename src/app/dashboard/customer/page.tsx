@@ -4,6 +4,8 @@ import CustomerOverviewStats from "@/components/dashboard/customer/customer-over
 import CustomerQuickActions from "@/components/dashboard/customer/customer-quick-actions";
 import CustomerRecentBookings from "@/components/dashboard/customer/customer-recent-bookings";
 import { getCustomerDashboardForServer } from "@/lib/customer-api-server";
+import { requireRole } from "@/lib/auth-server";
+import { hasRole } from "@/lib/roles";
 
 export const instant = false;
 
@@ -13,6 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CustomerDashboardPage() {
+  const { user } = await requireRole(["customer"]);
   const dashboard = await getCustomerDashboardForServer();
 
   if (!dashboard.ok && (dashboard.code === "UNAUTHORIZED" || dashboard.status === 401)) {
@@ -39,7 +42,7 @@ export default async function CustomerDashboardPage() {
           bookings={dashboard.ok ? dashboard.data.bookings : []}
           error={error}
         />
-        <CustomerQuickActions />
+        <CustomerQuickActions hasVendorAccess={hasRole(user.roles, "vendor", user.role)} />
       </div>
     </div>
   );

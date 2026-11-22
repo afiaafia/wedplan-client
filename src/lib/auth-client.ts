@@ -13,6 +13,10 @@ export const authClient = createAuthClient({
           type: ["customer", "vendor", "admin"],
           input: false,
         },
+        roles: {
+          type: "string[]",
+          input: false,
+        },
         isBlocked: {
           type: "boolean",
           input: false,

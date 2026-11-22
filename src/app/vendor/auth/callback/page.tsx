@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth-server";
 import { getSafeRedirectPath } from "@/lib/redirect-path";
 import { isAllowedPostAuthDestination, isRouteAllowedForRole } from "@/lib/route-access";
-import { getRoleDashboard, normalizeRole } from "@/lib/roles";
+import { getRoleDashboard, normalizeRoles } from "@/lib/roles";
 import VendorAuthRejection from "@/components/auth/vendor-auth-rejection";
 
 export const instant = false;
@@ -26,8 +26,8 @@ export default async function VendorAuthCallbackPage({
     redirect("/blocked");
   }
 
-  const role = normalizeRole(session.user.role);
-  if (role !== "vendor") {
+  const roles = normalizeRoles(session.user.roles, session.user.role);
+  if (!roles.includes("vendor")) {
     return <VendorAuthRejection />;
   }
 
@@ -39,9 +39,9 @@ export default async function VendorAuthCallbackPage({
   const target =
     requestedPath &&
     isAllowedPostAuthDestination(requestedPath) &&
-    isRouteAllowedForRole(requestedPath, role)
+    isRouteAllowedForRole(requestedPath, "vendor")
       ? requestedPath
-      : getRoleDashboard(role);
+      : getRoleDashboard("vendor");
 
   redirect(target);
 }

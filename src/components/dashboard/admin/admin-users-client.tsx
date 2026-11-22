@@ -237,7 +237,9 @@ export default function AdminUsersClient() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 capitalize text-muted">{user.role}</td>
+                    <td className="px-4 py-3 capitalize text-muted">
+                      {user.roles.join(", ")}
+                    </td>
                     <td className="px-4 py-3 capitalize text-muted">
                       {user.subscriptionPlan}
                     </td>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth-server";
-import { getRoleDashboard } from "@/lib/roles";
+import { getRoleDashboard, normalizeRoles } from "@/lib/roles";
 import VendorSignInForm from "@/components/auth/vendor-sign-in-form";
 
 export const instant = false;
@@ -17,7 +17,10 @@ export default async function VendorSignInPage() {
     if (session.user.isBlocked === true) {
       redirect("/blocked");
     }
-    redirect(getRoleDashboard(session.user.role));
+    const roles = normalizeRoles(session.user.roles, session.user.role);
+    redirect(
+      getRoleDashboard(roles.includes("vendor") ? "vendor" : session.user.role)
+    );
   }
 
   return <VendorSignInForm />;

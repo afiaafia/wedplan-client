@@ -13,7 +13,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
-import { getRoleDashboard, normalizeRole } from "@/lib/roles";
+import { getRoleDashboard, hasRole, normalizeRole } from "@/lib/roles";
 import { formatPrice, type ServiceDetail } from "@/lib/services-api";
 import type { BookingConfirmation as BookingConfirmationData } from "@/lib/bookings-api";
 import BookingConfirmation from "./booking-confirmation";
@@ -29,9 +29,16 @@ export default function BookingCard({ service }: { service: ServiceDetail }) {
     useState<BookingConfirmationData | null>(null);
 
   const user = session?.user;
-  const role = user ? normalizeRole(user.role) : null;
+  const canBookAsCustomer = user
+    ? hasRole(user.roles, "customer", user.role)
+    : false;
+  const role = user
+    ? canBookAsCustomer
+      ? "customer"
+      : normalizeRole(user.role)
+    : null;
   const isBlocked = user?.isBlocked === true;
-  const canBook = role === "customer" && !isBlocked;
+  const canBook = canBookAsCustomer && !isBlocked;
 
   function redirectToSignIn() {
     const target = `/services/${encodeURIComponent(service.id)}`;

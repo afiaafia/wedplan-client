@@ -1,14 +1,16 @@
 import { toImageUploadPayload } from "@/lib/vendor-api";
+import type { UserRole } from "@/lib/roles";
 
 const PROFILE_API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
 ).replace(/\/+$/, "");
 
 export interface ProfileResponse {
-  id: string;
+  id?: string;
   name?: string;
   email?: string;
   role?: string;
+  roles?: UserRole[];
   isBlocked?: boolean;
   image?: string | null;
   businessName?: string | null;
@@ -131,6 +133,13 @@ export function getProfile(signal?: AbortSignal): Promise<ProfileResponse> {
     method: "GET",
     signal,
     fallbackMessage: "Unable to load your profile.",
+  });
+}
+
+export function activateVendorAccess(): Promise<ProfileResponse> {
+  return requestProfileApi("/api/me/roles/vendor", {
+    method: "POST",
+    fallbackMessage: "Unable to activate Vendor access.",
   });
 }
 

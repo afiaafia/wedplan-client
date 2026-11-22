@@ -125,7 +125,7 @@ export default function AdminOverviewClient() {
                 items={data.recentUsers.map((user) => ({
                   id: user.id,
                   primary: user.name,
-                  secondary: `${user.email} · ${user.role}`,
+                  secondary: `${user.email} · ${user.roles.join(", ")}`,
                   image: user.image,
                   meta: formatEventDate(user.createdAt),
                 }))}

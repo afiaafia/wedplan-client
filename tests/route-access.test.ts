@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  isAllowedPostAuthRedirectForRoles,
   isAllowedPostAuthRedirect,
   isProtectedAppPath,
   isRouteAllowedForRole,
+  isRouteAllowedForRoles,
 } from "../src/lib/route-access.ts";
 
 test("service detail paths are allowed post-auth destinations for every role", () => {
@@ -28,6 +30,31 @@ test("protected paths remain restricted to their own roles", () => {
   assert.equal(isAllowedPostAuthRedirect("/dashboard/vendor", "admin"), false);
   assert.equal(isAllowedPostAuthRedirect("/dashboard/admin", "admin"), true);
   assert.equal(isAllowedPostAuthRedirect("/settings?tab=profile", "customer"), true);
+});
+
+test("multi-role accounts can open both dashboards while single-role users stay isolated", () => {
+  const dualRoles = ["customer", "vendor"] as const;
+  assert.equal(
+    isRouteAllowedForRoles("/dashboard/customer/bookings", dualRoles),
+    true
+  );
+  assert.equal(isRouteAllowedForRoles("/dashboard/vendor", dualRoles), true);
+  assert.equal(
+    isAllowedPostAuthRedirectForRoles("/dashboard/vendor", dualRoles),
+    true
+  );
+  assert.equal(
+    isRouteAllowedForRoles("/dashboard/vendor", ["customer"]),
+    false
+  );
+  assert.equal(
+    isRouteAllowedForRoles("/dashboard/admin", dualRoles),
+    false
+  );
+  assert.equal(
+    isAllowedPostAuthRedirectForRoles("/dashboard/admin", ["customer", "vendor"]),
+    false
+  );
 });
 
 test("unrelated or unsafe paths are not treated as service destinations", () => {
