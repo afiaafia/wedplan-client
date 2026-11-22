@@ -200,9 +200,9 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
           email: email.trim(),
           password,
           callbackURL,
-          role,
+          registrationRole: role,
         } as Parameters<typeof signUp.email>[0] & {
-          role: RegistrationRole;
+          registrationRole: RegistrationRole;
         };
 
         const result = await signUp.email(payload);
