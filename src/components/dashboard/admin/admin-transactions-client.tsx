@@ -1,12 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { AlertCircle, Eye, Loader2, RefreshCw, X } from "lucide-react";
 import {
   getAdminTransactions,
   type AdminTransaction,
 } from "@/lib/admin-api";
-import { formatEventDate } from "@/lib/vendor-dashboard";
+import {
+  formatCurrencyAmount,
+  formatEventDate,
+} from "@/lib/vendor-dashboard";
 
 const PAGE_SIZE = 10;
 
@@ -28,6 +31,7 @@ export default function AdminTransactionsClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+  const [detail, setDetail] = useState<AdminTransaction | null>(null);
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -138,7 +142,7 @@ export default function AdminTransactionsClient() {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
+            <table className="w-full min-w-[1180px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted">
                   <th className="px-4 py-3">Transaction</th>
@@ -146,8 +150,10 @@ export default function AdminTransactionsClient() {
                   <th className="px-4 py-3">Plan</th>
                   <th className="px-4 py-3">Amount</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Provider</th>
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Reference</th>
+                  <th className="px-4 py-3 text-right">Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -166,7 +172,7 @@ export default function AdminTransactionsClient() {
                       {transaction.plan}
                     </td>
                     <td className="px-4 py-3 font-semibold text-foreground">
-                      {transaction.currency.toUpperCase()} {transaction.amount}
+                      {formatCurrencyAmount(transaction.amount, transaction.currency)}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -183,6 +189,9 @@ export default function AdminTransactionsClient() {
                         {transaction.status}
                       </span>
                     </td>
+                    <td className="px-4 py-3 capitalize text-muted">
+                      {transaction.provider}
+                    </td>
                     <td className="px-4 py-3 text-muted">
                       {formatEventDate(transaction.createdAt)}
                     </td>
@@ -190,6 +199,16 @@ export default function AdminTransactionsClient() {
                       {transaction.stripeSessionId
                         ? `${transaction.stripeSessionId.slice(0, 12)}…`
                         : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setDetail(transaction)}
+                        aria-label={`View transaction ${transaction.id}`}
+                        className="rounded-lg border border-border p-2 text-muted transition hover:text-primary"
+                      >
+                        <Eye size={15} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -225,9 +244,92 @@ export default function AdminTransactionsClient() {
         </div>
       )}
 
+      {detail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/25 p-4 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-transaction-detail-title"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border/70 bg-card p-6 shadow-xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  id="admin-transaction-detail-title"
+                  className="font-serif text-2xl text-foreground"
+                >
+                  Transaction details
+                </h2>
+                <p className="mt-1 break-all font-mono text-xs text-muted">
+                  {detail.id}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetail(null)}
+                aria-label="Close transaction details"
+                className="rounded-lg p-1.5 text-muted hover:bg-secondary"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <dl className="mt-5 space-y-3 text-sm">
+              <DetailRow
+                label="Vendor"
+                value={detail.vendorName || "Vendor"}
+              />
+              {detail.vendorEmail && (
+                <DetailRow label="Vendor email" value={detail.vendorEmail} />
+              )}
+              <DetailRow label="Plan" value={detail.plan} />
+              <DetailRow
+                label="Amount"
+                value={formatCurrencyAmount(detail.amount, detail.currency)}
+              />
+              <DetailRow label="Status" value={detail.status} />
+              <DetailRow
+                label="Payment provider"
+                value={detail.provider}
+              />
+              <DetailRow
+                label="Transaction date"
+                value={formatEventDate(detail.createdAt)}
+              />
+              <DetailRow
+                label="Stripe Checkout session"
+                value={detail.stripeSessionId || "Not available"}
+              />
+              <DetailRow
+                label="Stripe subscription"
+                value={detail.stripeSubscriptionId || "Not available"}
+              />
+            </dl>
+            <p className="mt-5 rounded-xl bg-secondary/60 p-3 text-xs leading-5 text-muted">
+              Transaction status is read-only and is updated only by verified payment events.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDetail(null)}
+              className="mt-5 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       <p className="text-xs text-muted">
         Transaction statuses are recorded by the payment webhook and are read-only.
       </p>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-2 last:border-0">
+      <dt className="shrink-0 text-muted">{label}</dt>
+      <dd className="break-all text-right font-medium text-foreground">{value}</dd>
     </div>
   );
 }

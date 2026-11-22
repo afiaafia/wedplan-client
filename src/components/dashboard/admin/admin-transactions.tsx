@@ -6,7 +6,10 @@ import {
   getAdminTransactions,
   type AdminTransaction,
 } from "@/lib/admin-api";
-import type { PaginationMeta } from "@/lib/vendor-dashboard";
+import {
+  formatCurrencyAmount,
+  type PaginationMeta,
+} from "@/lib/vendor-dashboard";
 
 const STATUS_OPTIONS = ["all", "pending", "completed", "failed", "cancelled", "refunded"];
 
@@ -18,17 +21,6 @@ const EMPTY_META: PaginationMeta = {
   hasNextPage: false,
   hasPreviousPage: false,
 };
-
-function formatAmount(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency.toUpperCase(),
-    }).format(amount);
-  } catch {
-    return `${amount.toFixed(2)} ${currency.toUpperCase()}`;
-  }
-}
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -196,7 +188,7 @@ export default function AdminTransactions() {
                     {transaction.plan}
                   </td>
                   <td className="py-3 text-foreground">
-                    {formatAmount(transaction.amount, transaction.currency)}
+                    {formatCurrencyAmount(transaction.amount, transaction.currency)}
                   </td>
                   <td className="py-3">
                     <span className="rounded-full border border-border bg-secondary px-2 py-1 capitalize text-foreground">
