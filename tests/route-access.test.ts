@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   isAllowedPostAuthRedirectForRoles,
   isAllowedPostAuthRedirect,
+  getSafePostAuthRedirect,
   isProtectedAppPath,
   isRouteAllowedForRole,
   isRouteAllowedForRoles,
@@ -20,6 +21,33 @@ test("service detail paths are allowed post-auth destinations for every role", (
       true
     );
   }
+});
+
+test("service detail routes require sign-in while the browse page stays public", () => {
+  assert.equal(isProtectedAppPath("/services"), false);
+  assert.equal(isProtectedAppPath("/services/507f1f77bcf86cd799439011"), true);
+  assert.equal(isProtectedAppPath("/services/507f1f77bcf86cd799439011/reviews"), false);
+});
+
+test("safe callback destinations return customers, vendors, and admins to service details", () => {
+  const callbackURL = "/services/507f1f77bcf86cd799439011?booking=1";
+  const baseUrl = "https://wedplan.example/sign-in";
+
+  for (const role of ["customer", "vendor", "admin"] as const) {
+    assert.equal(
+      getSafePostAuthRedirect(callbackURL, null, baseUrl, [role]),
+      callbackURL
+    );
+  }
+
+  assert.equal(
+    getSafePostAuthRedirect(null, "/dashboard/vendor", baseUrl, ["customer"]),
+    null
+  );
+  assert.equal(
+    getSafePostAuthRedirect("https://evil.example", null, baseUrl, ["customer"]),
+    null
+  );
 });
 
 test("protected paths remain restricted to their own roles", () => {

@@ -10,6 +10,10 @@ test("safe redirect paths preserve local paths and query strings", () => {
     "/dashboard/vendor?service=new"
   );
   assert.equal(getSafeRedirectPath("/", baseUrl), "/");
+  assert.equal(
+    getSafeRedirectPath("/services/abc123?booking=1", baseUrl),
+    "/services/abc123?booking=1"
+  );
 });
 
 test("safe redirect paths reject protocol-relative and external values", () => {

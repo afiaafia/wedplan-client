@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerApiBaseUrl } from "@/lib/api-url";
-import { getSafeRedirectPath } from "@/lib/redirect-path";
 import {
   getRoleDashboard,
   normalizeRoles,
@@ -9,17 +8,13 @@ import {
 } from "@/lib/roles";
 import {
   isProtectedAppPath,
+  getSafePostAuthRedirect,
   isRouteAllowedForRoles,
 } from "@/lib/route-access";
 import { getVendorSignInDisposition } from "@/lib/vendor-auth";
 import { hasValidSessionExpiry } from "@/lib/session-expiry";
 
 const AUTH_PATHS = ["/sign-in", "/sign-up", "/vendor/sign-in"];
-const ROLE_DASHBOARDS = [
-  getRoleDashboard("customer"),
-  getRoleDashboard("vendor"),
-  getRoleDashboard("admin"),
-];
 
 type ProxySession = {
   session?: {
@@ -56,7 +51,10 @@ export async function proxy(request: NextRequest) {
 
   if (isProtected && !session) {
     const signInUrl = new URL("/sign-in", request.url);
-    signInUrl.searchParams.set("redirect", pathname);
+    signInUrl.searchParams.set(
+      "callbackURL",
+      `${pathname}${request.nextUrl.search}`
+    );
     return NextResponse.redirect(signInUrl);
   }
 
@@ -106,16 +104,13 @@ export async function proxy(request: NextRequest) {
       : authDashboard;
 
   if (isAuthPath && session && !isBlocked && defaultAuthTarget && authDashboardRole) {
-    const requestedPath = getSafeRedirectPath(
+    const requestedPath = getSafePostAuthRedirect(
+      request.nextUrl.searchParams.get("callbackURL"),
       request.nextUrl.searchParams.get("redirect"),
-      request.url
+      request.url,
+      roles
     );
-    const target =
-      requestedPath &&
-      (!isRoleDashboardPath(requestedPath) ||
-        isRouteAllowedForRoles(requestedPath, roles))
-        ? requestedPath
-        : defaultAuthTarget;
+    const target = requestedPath ?? defaultAuthTarget;
 
     return NextResponse.redirect(new URL(target, request.url));
   }
@@ -125,12 +120,6 @@ export async function proxy(request: NextRequest) {
   }
 
   return NextResponse.next();
-}
-
-function isRoleDashboardPath(path: string): boolean {
-  return ROLE_DASHBOARDS.some(
-    (base) => path === base || path.startsWith(`${base}/`)
-  );
 }
 
 async function validateSession(
@@ -171,6 +160,7 @@ async function validateSession(
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/services/:path*",
     "/vendor/onboarding/:path*",
     "/settings",
     "/sign-in",

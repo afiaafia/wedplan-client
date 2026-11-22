@@ -1,4 +1,5 @@
 import { type UserRole } from "./roles.ts";
+import { getSafeRedirectPath } from "./redirect-path.ts";
 
 type AccessRule = {
   prefix: string;
@@ -17,9 +18,16 @@ const ROUTE_RULES: readonly AccessRule[] = [
 ];
 
 export function isProtectedAppPath(pathname: string): boolean {
-  return ROUTE_RULES.some(
-    (rule) => pathname === rule.prefix || pathname.startsWith(`${rule.prefix}/`)
+  return (
+    isServiceDetailPath(pathname) ||
+    ROUTE_RULES.some(
+      (rule) => pathname === rule.prefix || pathname.startsWith(`${rule.prefix}/`)
+    )
   );
+}
+
+export function isServiceDetailPath(pathname: string): boolean {
+  return /^\/services\/[^/]+\/?$/.test(pathname);
 }
 
 export function isRouteAllowedForRole(
@@ -77,4 +85,17 @@ export function isAllowedPostAuthRedirectForRoles(
   }
 
   return PUBLIC_SERVICE_PATH.test(pathname);
+}
+
+export function getSafePostAuthRedirect(
+  callbackURL: string | null,
+  redirect: string | null,
+  baseUrl: string,
+  roles: readonly UserRole[]
+): string | null {
+  const requestedPath = getSafeRedirectPath(callbackURL ?? redirect, baseUrl);
+
+  return requestedPath && isAllowedPostAuthRedirectForRoles(requestedPath, roles)
+    ? requestedPath
+    : null;
 }
