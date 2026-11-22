@@ -63,10 +63,10 @@ Use pnpm only; other package managers are not used by this project.
 
 | Variable | Scope | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | Browser | Backend API base URL for browser-side data requests |
-| `NEXT_PUBLIC_BETTER_AUTH_URL` | Browser | Better Auth base URL (backend origin) |
+| `NEXT_PUBLIC_API_URL` | Browser | API origin (same frontend origin in production; backend origin locally) |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Browser | Better Auth origin (same frontend origin in production; backend origin locally) |
 | `NEXT_PUBLIC_SITE_URL` | Browser | Frontend origin used in user-facing links |
-| `API_INTERNAL_URL` | Server only | Internal backend base URL for server components; takes precedence over public URL variables |
+| `API_INTERNAL_URL` | Server only | Backend origin used by Next.js API rewrites and server components |
 
 `NEXT_PUBLIC_*` values are embedded in the browser bundle. Never place secrets in them. Secrets such as the Better Auth secret, MongoDB URI, ImgBB key, and Stripe secret key belong only on the backend. See `.env.example` for local defaults.
 
@@ -88,6 +88,8 @@ public/                     Static assets
 
 Deployed on Vercel as an existing Next.js project. No `vercel.json` is required: the platform detects Next.js, uses `pnpm build`, and serves the App Router output. Dynamic dashboard and service-detail routes are server-rendered; nested route refreshes work with the default Vercel Next.js handling.
 
-Required Vercel environment variables are the same names shown above, with production values set in the Vercel dashboard. `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_BETTER_AUTH_URL` must point to the deployed backend. Image optimization is configured for `images.unsplash.com` in `next.config.ts`; other provider images use direct `<img>` URLs from the database.
+In production, set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_BETTER_AUTH_URL` to the frontend origin (`https://wedplan-client-ten.vercel.app`) and set `API_INTERNAL_URL` to the backend origin (`https://wedplan-server-vcdp.onrender.com`). Next.js rewrites `/api/*` to the backend, so browser auth, OAuth callbacks, and API calls stay on the frontend origin. This makes Better Auth state/session cookies first-party while the server-side rewrite forwards them to Render. Keep local `.env.local` URLs pointed at `http://localhost:5000`; `API_INTERNAL_URL` is also `http://localhost:5000` locally.
 
-Cross-site authentication requires the backend to allow the Vercel origin in CORS and Better Auth trusted origins, and to configure session cookies for cross-site credentialed requests. See the backend README for the exact backend variables.
+Set `NEXT_PUBLIC_SITE_URL` to the frontend origin. The backend `BETTER_AUTH_URL` must also use the frontend origin so Google returns to `https://wedplan-client-ten.vercel.app/api/auth/callback/google`, which is forwarded through the rewrite. Register that exact URL as an authorized redirect URI in Google Cloud Console. Image optimization is configured for `images.unsplash.com` in `next.config.ts`; other provider images use direct `<img>` URLs from the database.
+
+The backend must allow the Vercel origin in CORS and Better Auth trusted origins. Browser cookies are first-party through the same-origin rewrite, so they do not depend on third-party cookie support. See the backend README for the exact backend variables.
