@@ -41,7 +41,7 @@ test("backend auth error codes are translated into user-friendly messages", () =
 test("OAuth query errors are mapped and descriptions are bounded", () => {
   assert.equal(authQueryErrorMessage(null, null), "");
   assert.match(authQueryErrorMessage("access_denied", null), /cancelled/i);
-  assert.match(authQueryErrorMessage("not_vendor", null), /Customer Sign In/);
+  assert.match(authQueryErrorMessage("not_vendor", null), /registered as a Customer/);
   assert.equal(
     authQueryErrorMessage("oauth_failed", "Provider unavailable"),
     "Provider unavailable"

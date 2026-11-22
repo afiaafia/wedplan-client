@@ -24,6 +24,8 @@ test("protected paths remain restricted to their own roles", () => {
   assert.equal(isAllowedPostAuthRedirect("/dashboard/customer/bookings", "customer"), true);
   assert.equal(isAllowedPostAuthRedirect("/dashboard/customer/bookings", "vendor"), false);
   assert.equal(isAllowedPostAuthRedirect("/dashboard/vendor", "vendor"), true);
+  assert.equal(isAllowedPostAuthRedirect("/dashboard/vendor", "customer"), false);
+  assert.equal(isAllowedPostAuthRedirect("/dashboard/vendor", "admin"), false);
   assert.equal(isAllowedPostAuthRedirect("/dashboard/admin", "admin"), true);
   assert.equal(isAllowedPostAuthRedirect("/settings?tab=profile", "customer"), true);
 });
