@@ -6,6 +6,26 @@ import {
 } from "../src/lib/auth-errors.ts";
 import { validateSignUpPassword } from "../src/lib/password.ts";
 import { isAllowedPostAuthDestination } from "../src/lib/route-access.ts";
+import {
+  claimGoogleOAuthFlow,
+  clearGoogleOAuthFlow,
+  GOOGLE_OAUTH_STATE_TTL_MS,
+  hasPendingGoogleOAuthFlow,
+} from "../src/lib/google-oauth-flow.ts";
+
+function createMemoryStorage(): Storage {
+  const values = new Map<string, string>();
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+    clear: () => values.clear(),
+    key: (index) => Array.from(values.keys())[index] ?? null,
+    get length() {
+      return values.size;
+    },
+  };
+}
 
 test("backend auth error codes are translated into user-friendly messages", () => {
   assert.match(authErrorMessage({ code: "ACCOUNT_BLOCKED" }), /blocked/i);
@@ -51,4 +71,21 @@ test("Google post-auth destinations stay inside WedPlan", () => {
   assert.equal(isAllowedPostAuthDestination("https://evil.example"), false);
   assert.equal(isAllowedPostAuthDestination("//evil.example/services"), false);
   assert.equal(isAllowedPostAuthDestination("/dashboard/admin"), true);
+});
+
+test("Google OAuth state cannot be overwritten by a concurrent tab", () => {
+  const storage = createMemoryStorage();
+  const firstFlow = claimGoogleOAuthFlow(storage, 1000);
+  assert.ok(firstFlow);
+  assert.equal(claimGoogleOAuthFlow(storage, 2000), null);
+  assert.equal(hasPendingGoogleOAuthFlow(storage, 2000), true);
+  const secondFlow = claimGoogleOAuthFlow(
+    storage,
+    1000 + GOOGLE_OAUTH_STATE_TTL_MS + 1
+  );
+  assert.ok(secondFlow);
+  clearGoogleOAuthFlow(storage, firstFlow);
+  assert.equal(hasPendingGoogleOAuthFlow(storage, 1000 + GOOGLE_OAUTH_STATE_TTL_MS + 2), true);
+  clearGoogleOAuthFlow(storage, secondFlow);
+  assert.equal(hasPendingGoogleOAuthFlow(storage, 1000), false);
 });

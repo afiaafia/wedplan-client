@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -33,6 +33,10 @@ import {
   type RegistrationRole,
   type UserRole,
 } from "@/lib/roles";
+import {
+  finishGoogleOAuthFlow,
+  startGoogleOAuthFlow,
+} from "@/lib/google-oauth-flow";
 
 function getFrontendUrl(path: string = "/"): string {
   const base =
@@ -105,6 +109,10 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
   const errorDescription = searchParams.get("error_description");
   const error = formError || authQueryErrorMessage(errorParam, errorDescription);
   const showRoleMismatch = roleMismatch || errorParam === "not_vendor";
+
+  useEffect(() => {
+    if (errorParam) finishGoogleOAuthFlow();
+  }, [errorParam]);
 
   async function redirectAfterAuth() {
     const result = await getSession();
@@ -252,6 +260,15 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
   async function handleGoogleSignIn() {
     setFormError("");
     setRoleMismatch(false);
+    const flowLock = startGoogleOAuthFlow();
+    if (flowLock !== "started") {
+      setFormError(
+        flowLock === "pending"
+          ? "A Google sign-in is already in progress in another tab. Complete it or wait for it to expire."
+          : "Google sign-in requires browser storage. Enable site storage and try again."
+      );
+      return;
+    }
     setGoogleLoading(true);
 
     try {
@@ -265,11 +282,17 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
         requestedPath && isAllowedPostAuthDestination(requestedPath)
           ? requestedPath
           : null;
-      const callbackPath = isVendorSignIn
+      const isVendorFlow = isVendorSignIn || (isSignUp && role === "vendor");
+      const callbackPath = isVendorFlow
         ? `/vendor/auth/callback${destination ? `?redirect=${encodeURIComponent(destination)}` : ""}`
         : destination ?? getRoleDashboard("customer");
+      const requestedRole = isVendorFlow ? "vendor" : "customer";
+
       const result = await signIn.social({
         provider: "google",
+        additionalData: {
+          role: isSignUp ? role : requestedRole,
+        },
         callbackURL: getFrontendUrl(callbackPath),
         errorCallbackURL: getFrontendUrl(
           isVendorSignIn ? "/vendor/sign-in" : isSignUp ? "/sign-up" : "/sign-in"
@@ -277,11 +300,13 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
       });
 
       if (result?.error) {
+        finishGoogleOAuthFlow();
         const message = authErrorMessage(result.error);
         setFormError(message);
         showToast({ title: "Google sign-in failed", description: message, variant: "error" });
       }
     } catch (err) {
+      finishGoogleOAuthFlow();
       const message =
         err instanceof Error ? err.message : "Google authentication failed.";
       setFormError(message);
@@ -390,7 +415,7 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
             </button>
             {isSignUp && (
               <p className="mt-2 text-center text-[11px] text-muted">
-                Google accounts are created with the Customer role.
+                Google accounts are created with the selected account type.
               </p>
             )}
 

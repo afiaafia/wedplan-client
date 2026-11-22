@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -22,6 +22,10 @@ import {
   isAllowedPostAuthRedirect,
 } from "@/lib/route-access";
 import { getRoleDashboard, normalizeRole, type UserRole } from "@/lib/roles";
+import {
+  finishGoogleOAuthFlow,
+  startGoogleOAuthFlow,
+} from "@/lib/google-oauth-flow";
 
 function getFrontendUrl(path: string = "/"): string {
   const base =
@@ -83,6 +87,10 @@ export default function VendorSignInForm() {
   const errorDescription = searchParams.get("error_description");
   const error = formError || authQueryErrorMessage(errorParam, errorDescription);
   const showRoleMismatch = roleMismatch || errorParam === "not_vendor";
+
+  useEffect(() => {
+    if (errorParam) finishGoogleOAuthFlow();
+  }, [errorParam]);
 
   async function handlePostSignInVerification() {
     const sessionResult = await getSession();
@@ -222,6 +230,15 @@ export default function VendorSignInForm() {
 
     setFormError("");
     setRoleMismatch(false);
+    const flowLock = startGoogleOAuthFlow();
+    if (flowLock !== "started") {
+      setFormError(
+        flowLock === "pending"
+          ? "A Google sign-in is already in progress in another tab. Complete it or wait for it to expire."
+          : "Google sign-in requires browser storage. Enable site storage and try again."
+      );
+      return;
+    }
     setGoogleLoading(true);
 
     try {
@@ -242,11 +259,15 @@ export default function VendorSignInForm() {
 
       const result = await signIn.social({
         provider: "google",
+        additionalData: {
+          role: "vendor",
+        },
         callbackURL: getFrontendUrl(callbackPath),
         errorCallbackURL: getFrontendUrl("/vendor/sign-in"),
       });
 
       if (result?.error) {
+        finishGoogleOAuthFlow();
         const message = authErrorMessage(result.error);
         setFormError(message);
         showToast({
@@ -256,6 +277,7 @@ export default function VendorSignInForm() {
         });
       }
     } catch (err) {
+      finishGoogleOAuthFlow();
       const message =
         err instanceof Error ? err.message : "Google authentication failed.";
       setFormError(message);

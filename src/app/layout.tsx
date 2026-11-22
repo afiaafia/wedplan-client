@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import MotionProvider from "@/components/motion-provider";
 import ToastProvider from "@/components/layout/toast-provider";
+import GoogleOAuthLockCleanup from "@/components/auth/google-oauth-lock-cleanup";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <ToastProvider>
           <MotionProvider>
+            <GoogleOAuthLockCleanup />
             <Navbar />
             {children}
             <Footer />
