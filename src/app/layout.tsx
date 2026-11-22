@@ -34,7 +34,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${dmSans.variable} ${playfair.variable}`}
+    >
       <body className="min-h-screen antialiased">
         <ToastProvider>
           <MotionProvider>

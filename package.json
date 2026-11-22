@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/redirect-path.test.ts tests/roles.test.ts tests/route-access.test.ts tests/auth-client.test.ts tests/vendor-auth.test.ts tests/profile-api.test.ts tests/session-expiry.test.ts tests/vendor-dashboard.test.ts tests/vendor-dashboard-request.test.ts tests/vendor-api.test.ts tests/featured-services.test.ts tests/admin-services.test.ts tests/booking-api.test.ts tests/booking-form.test.ts tests/services-browse.test.ts tests/customer-dashboard.test.ts"
+    "test": "node --experimental-strip-types --test tests/redirect-path.test.ts tests/roles.test.ts tests/route-access.test.ts tests/auth-client.test.ts tests/vendor-auth.test.ts tests/profile-api.test.ts tests/footer-links.test.ts tests/session-expiry.test.ts tests/vendor-dashboard.test.ts tests/vendor-dashboard-request.test.ts tests/vendor-api.test.ts tests/featured-services.test.ts tests/admin-services.test.ts tests/admin-api.test.ts tests/booking-api.test.ts tests/booking-form.test.ts tests/services-browse.test.ts tests/customer-dashboard.test.ts"
   },
   "dependencies": {
     "better-auth": "1.7.25",
@@ -20,7 +20,7 @@
     "react-icons": "^5.7.0"
   },
   "devDependencies": {
-    "@tailwindcss/turbopack": "4.3.3",
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
