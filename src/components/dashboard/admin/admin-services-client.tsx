@@ -16,6 +16,7 @@ import {
   getAdminServices,
   setAdminServiceActive,
   setAdminServiceApproval,
+  type AdminService,
 } from "@/lib/admin-api";
 import { SERVICE_CATEGORIES } from "@/lib/services-api";
 import type { VendorService } from "@/lib/vendor-dashboard";
@@ -27,17 +28,18 @@ const PAGE_SIZE = 10;
 export default function AdminServicesClient() {
   const { showToast } = useToast();
   const [search, setSearch] = useState("");
+  const [vendor, setVendor] = useState("");
   const [approval, setApproval] = useState("");
   const [active, setActive] = useState("");
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
-  const [services, setServices] = useState<VendorService[]>([]);
+  const [services, setServices] = useState<AdminService[]>([]);
   const [meta, setMeta] = useState<{ page: number; totalPages: number; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<VendorService | null>(null);
+  const [detail, setDetail] = useState<AdminService | null>(null);
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -47,6 +49,7 @@ export default function AdminServicesClient() {
         const result = await getAdminServices(
           {
             q: search.trim() || undefined,
+            vendor: vendor.trim() || undefined,
             approvalStatus: approval || undefined,
             isActive: active || undefined,
             category: category || undefined,
@@ -67,7 +70,7 @@ export default function AdminServicesClient() {
         if (!signal?.aborted) setLoading(false);
       }
     },
-    [active, approval, category, page, search]
+    [active, approval, category, page, search, vendor]
   );
 
   useEffect(() => {
@@ -84,7 +87,20 @@ export default function AdminServicesClient() {
 
   useEffect(() => {
     queueMicrotask(() => setPage(1));
-  }, [search, approval, active, category]);
+  }, [search, vendor, approval, active, category]);
+
+  function mergeUpdatedService(
+    existing: AdminService,
+    updated: VendorService
+  ): AdminService {
+    return {
+      ...existing,
+      ...updated,
+      ...(existing.vendorId ? { vendorId: existing.vendorId } : {}),
+      ...(existing.vendorName ? { vendorName: existing.vendorName } : {}),
+      ...(existing.vendorEmail ? { vendorEmail: existing.vendorEmail } : {}),
+    };
+  }
 
   async function moderate(service: VendorService, next: "approved" | "rejected") {
     let reason: string | undefined;
@@ -111,9 +127,15 @@ export default function AdminServicesClient() {
     try {
       const updated = await setAdminServiceApproval(service.id, next, reason);
       setServices((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item))
+        current.map((item) =>
+          item.id === updated.id ? mergeUpdatedService(item, updated) : item
+        )
       );
-      setDetail((current) => (current?.id === updated.id ? updated : current));
+      setDetail((current) =>
+        current?.id === updated.id
+          ? mergeUpdatedService(current, updated)
+          : current
+      );
       showToast({
         title: next === "approved" ? "Service approved" : "Service rejected",
         description: service.title,
@@ -146,9 +168,15 @@ export default function AdminServicesClient() {
     try {
       const updated = await setAdminServiceActive(service.id, next);
       setServices((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item))
+        current.map((item) =>
+          item.id === updated.id ? mergeUpdatedService(item, updated) : item
+        )
       );
-      setDetail((current) => (current?.id === updated.id ? updated : current));
+      setDetail((current) =>
+        current?.id === updated.id
+          ? mergeUpdatedService(current, updated)
+          : current
+      );
       showToast({
         title: next ? "Service activated" : "Service deactivated",
         description: service.title,
@@ -201,6 +229,14 @@ export default function AdminServicesClient() {
           placeholder="Search services"
           aria-label="Search services"
           className="min-w-[220px] flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary"
+        />
+        <input
+          type="search"
+          value={vendor}
+          onChange={(event) => setVendor(event.target.value)}
+          placeholder="Vendor name or email"
+          aria-label="Filter by vendor name or email"
+          className="min-w-[200px] flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary"
         />
         <select
           value={approval}
@@ -312,7 +348,12 @@ export default function AdminServicesClient() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-muted">
-                      {service.vendorName || "Vendor"}
+                      <p className="font-medium text-foreground">
+                        {service.vendorName || "Vendor"}
+                      </p>
+                      {service.vendorEmail && (
+                        <p className="text-xs">{service.vendorEmail}</p>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-muted">{service.category}</td>
                     <td className="px-4 py-3 text-muted">
@@ -478,6 +519,10 @@ export default function AdminServicesClient() {
             </p>
             <dl className="mt-5 space-y-2 border-t border-border/70 pt-4 text-sm">
               <DetailRow label="Vendor" value={detail.vendorName || "Vendor"} />
+              <DetailRow
+                label="Vendor email"
+                value={detail.vendorEmail || "Not available"}
+              />
               <DetailRow label="Approval" value={detail.approvalStatus} />
               <DetailRow
                 label="Availability"
