@@ -21,8 +21,9 @@ import { uploadProfileImage } from "@/lib/profile-api";
 import { validateSignUpPassword } from "@/lib/password";
 import { getSafeRedirectPath } from "@/lib/redirect-path";
 import {
+  getSafePostAuthRedirect,
   isAllowedPostAuthDestination,
-  isAllowedPostAuthRedirect,
+  isServiceDetailPath,
 } from "@/lib/route-access";
 import {
   DEFAULT_ROLE,
@@ -31,6 +32,7 @@ import {
   normalizeRole,
   normalizeRoles,
   REGISTRATION_ROLES,
+  USER_ROLES,
   type RegistrationRole,
   type UserRole,
 } from "@/lib/roles";
@@ -87,11 +89,21 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
   const { showToast } = useToast();
   const isSignUp = mode === "sign-up";
   const isVendorSignIn = !isSignUp && audience === "vendor";
+  const returnPath = getSafeRedirectPath(
+    searchParams.get("callbackURL") ?? searchParams.get("redirect"),
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  );
+  const returnPathname = returnPath?.split(/[?#]/, 1)[0] ?? "";
+  const isServiceDetailReturn = isServiceDetailPath(returnPathname);
   const allowedRoles: readonly UserRole[] | null = isSignUp
     ? null
-    : audience === "vendor"
-      ? ["vendor"]
-      : ["customer"];
+    : isServiceDetailReturn
+      ? USER_ROLES
+      : audience === "vendor"
+        ? ["vendor"]
+        : ["customer"];
 
   const roleParam = searchParams.get("role");
   const [role, setRole] = useState<RegistrationRole>(() =>
@@ -137,16 +149,15 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
     }
 
     const activeRole = requestedRole ?? normalizeRole(user?.role);
-    const requestedPath = getSafeRedirectPath(
+    const requestedPath = getSafePostAuthRedirect(
+      searchParams.get("callbackURL"),
       searchParams.get("redirect"),
       typeof window !== "undefined"
         ? window.location.origin
-        : "http://localhost:3000"
+        : "http://localhost:3000",
+      userRoles
     );
-    const target =
-      requestedPath && isAllowedPostAuthRedirect(requestedPath, activeRole)
-        ? requestedPath
-        : getRoleDashboard(activeRole);
+    const target = requestedPath ?? getRoleDashboard(activeRole);
 
     showToast({
       title: isSignUp ? "Account created" : "Signed in",
@@ -280,7 +291,7 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
 
     try {
       const requestedPath = getSafeRedirectPath(
-        searchParams.get("redirect"),
+        searchParams.get("callbackURL") ?? searchParams.get("redirect"),
         typeof window !== "undefined"
           ? window.location.origin
           : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"

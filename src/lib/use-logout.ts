@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { signOut } from "@/lib/auth-client";
+import { clearWedPlanBearerToken } from "./api-access-token";
 import { useToast } from "@/components/layout/toast-provider";
 
 export function useLogout() {
@@ -15,6 +16,7 @@ export function useLogout() {
     setIsSigningOut(true);
 
     try {
+      clearWedPlanBearerToken();
       const result = await signOut();
 
       if (result?.error) {
