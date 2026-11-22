@@ -11,6 +11,7 @@ import {
   isProtectedAppPath,
   isRouteAllowedForRoles,
 } from "@/lib/route-access";
+import { getVendorSignInDisposition } from "@/lib/vendor-auth";
 import { hasValidSessionExpiry } from "@/lib/session-expiry";
 
 const AUTH_PATHS = ["/sign-in", "/sign-up", "/vendor/sign-in"];
@@ -67,6 +68,25 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(
       new URL(roleDashboard ?? getRoleDashboard(role), request.url)
     );
+  }
+
+  if (
+    isAuthPath &&
+    pathname === "/vendor/sign-in" &&
+    session &&
+    !isBlocked
+  ) {
+    const disposition = getVendorSignInDisposition(roles);
+    if (disposition === "activate-vendor") {
+      return NextResponse.redirect(
+        new URL("/vendor/auth/callback", request.url)
+      );
+    }
+    if (disposition === "admin") {
+      return NextResponse.redirect(
+        new URL(getRoleDashboard("admin"), request.url)
+      );
+    }
   }
 
   const authDashboardRole =

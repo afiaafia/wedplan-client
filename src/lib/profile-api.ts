@@ -1,5 +1,5 @@
-import { toImageUploadPayload } from "@/lib/vendor-api";
-import type { UserRole } from "@/lib/roles";
+import { toImageUploadPayload } from "./vendor-api.ts";
+import type { UserRole } from "./roles.ts";
 
 const PROFILE_API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"

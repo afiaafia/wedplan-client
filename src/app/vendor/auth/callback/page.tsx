@@ -3,7 +3,8 @@ import { getServerSession } from "@/lib/auth-server";
 import { getSafeRedirectPath } from "@/lib/redirect-path";
 import { isAllowedPostAuthDestination, isRouteAllowedForRole } from "@/lib/route-access";
 import { getRoleDashboard, normalizeRoles } from "@/lib/roles";
-import VendorAuthRejection from "@/components/auth/vendor-auth-rejection";
+import { getVendorSignInDisposition } from "@/lib/vendor-auth";
+import VendorAccessConfirmation from "@/components/auth/vendor-access-confirmation";
 
 export const instant = false;
 
@@ -27,8 +28,15 @@ export default async function VendorAuthCallbackPage({
   }
 
   const roles = normalizeRoles(session.user.roles, session.user.role);
-  if (!roles.includes("vendor")) {
-    return <VendorAuthRejection />;
+  const disposition = getVendorSignInDisposition(roles);
+  if (disposition === "activate-vendor") {
+    return <VendorAccessConfirmation source="google" />;
+  }
+  if (disposition === "admin") {
+    redirect(getRoleDashboard("admin"));
+  }
+  if (disposition !== "vendor") {
+    redirect("/vendor/sign-in?error=not_vendor");
   }
 
   const params = await searchParams;

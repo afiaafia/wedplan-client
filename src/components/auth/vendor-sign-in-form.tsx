@@ -16,12 +16,14 @@ import {
 import { getSession, signIn, signOut } from "@/lib/auth-client";
 import { authErrorMessage, authQueryErrorMessage } from "@/lib/auth-errors";
 import { useToast } from "@/components/layout/toast-provider";
+import VendorAccessConfirmation from "@/components/auth/vendor-access-confirmation";
 import { getSafeRedirectPath } from "@/lib/redirect-path";
 import {
   isAllowedPostAuthDestination,
   isAllowedPostAuthRedirect,
 } from "@/lib/route-access";
 import { getRoleDashboard, normalizeRoles } from "@/lib/roles";
+import { getVendorSignInDisposition } from "@/lib/vendor-auth";
 import {
   finishGoogleOAuthFlow,
   startGoogleOAuthFlow,
@@ -80,6 +82,8 @@ export default function VendorSignInForm() {
     password?: string;
   }>({});
   const [roleMismatch, setRoleMismatch] = useState(false);
+  const [showActivationConfirmation, setShowActivationConfirmation] =
+    useState(false);
 
   const errorParam = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
@@ -116,20 +120,23 @@ export default function VendorSignInForm() {
     }
 
     const userRoles = normalizeRoles(user.roles, user.role);
+    const disposition = getVendorSignInDisposition(userRoles);
 
-    if (!userRoles.includes("vendor")) {
+    if (disposition === "activate-vendor") {
+      setShowActivationConfirmation(true);
+      return;
+    }
+
+    if (disposition === "admin") {
+      router.replace(getRoleDashboard("admin"));
+      router.refresh();
+      return;
+    }
+
+    if (disposition !== "vendor") {
       await signOut();
       setRoleMismatch(true);
-      const mismatchMessage =
-        userRoles.includes("customer")
-          ? "This account does not have Vendor access yet. Sign in as a Customer and complete Vendor onboarding."
-          : "This account is not authorized to access the Vendor Dashboard.";
-      setFormError(mismatchMessage);
-      showToast({
-        title: "Vendor access required",
-        description: mismatchMessage,
-        variant: "error",
-      });
+      setFormError("This account is not authorized to access the Vendor Dashboard.");
       return;
     }
 
@@ -162,6 +169,7 @@ export default function VendorSignInForm() {
     setFormError("");
     setFieldErrors({});
     setRoleMismatch(false);
+    setShowActivationConfirmation(false);
 
     const errors: { email?: string; password?: string } = {};
     const trimmedEmail = email.trim();
@@ -287,6 +295,10 @@ export default function VendorSignInForm() {
     } finally {
       setGoogleLoading(false);
     }
+  }
+
+  if (showActivationConfirmation) {
+    return <VendorAccessConfirmation source="email" />;
   }
 
   return (
