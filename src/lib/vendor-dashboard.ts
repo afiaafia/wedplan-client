@@ -185,6 +185,18 @@ export function formatVendorPrice(price: number): string {
   }).format(price);
 }
 
+export function formatCurrencyAmount(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency.toUpperCase(),
+    }).format(amount);
+  } catch (error) {
+    if (!(error instanceof RangeError)) throw error;
+    return `${amount.toFixed(2)} ${currency.toUpperCase()}`;
+  }
+}
+
 export function formatEventDate(value: string): string {
   const date = new Date(value);
 

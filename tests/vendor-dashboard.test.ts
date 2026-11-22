@@ -4,6 +4,7 @@ import {
   EMPTY_VENDOR_OVERVIEW,
   formatApprovalLabel,
   formatBookingStatus,
+  formatCurrencyAmount,
   formatEventDate,
   formatVendorPrice,
   getFirstName,
@@ -35,6 +36,11 @@ test("vendor initials and first name handle missing names", () => {
 test("vendor price formatting uses a stable currency format", () => {
   assert.equal(formatVendorPrice(1250), "$1,250.00");
   assert.equal(formatVendorPrice(99.5), "$99.50");
+});
+
+test("currency formatting preserves currency units and safely handles unknown codes", () => {
+  assert.equal(formatCurrencyAmount(125.5, "usd"), "$125.50");
+  assert.equal(formatCurrencyAmount(12.5, "unknown"), "12.50 UNKNOWN");
 });
 
 test("event dates format deterministically and handle invalid values", () => {
