@@ -122,3 +122,83 @@ body {
     background-color 300ms ease,
     color 300ms ease;
 }
+
+/* WedPlan footer: continuously animated glass social borders */
+.social-glow {
+  isolation: isolate;
+  overflow: visible;
+  position: relative;
+}
+
+.social-glow::before,
+.social-glow::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.social-glow::before {
+  z-index: 0;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--footer-glow-angle, 0deg),
+    transparent 0deg,
+    transparent 45deg,
+    #b89570 85deg,
+    #d6a5a8 125deg,
+    #75434b 165deg,
+    transparent 210deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: footer-border-spin 5s linear infinite;
+}
+
+.social-glow::after {
+  z-index: -1;
+  inset: 1px;
+  background: conic-gradient(
+    from var(--footer-glow-angle, 0deg),
+    transparent 0deg,
+    #b89570 90deg,
+    #d6a5a8 145deg,
+    #75434b 190deg,
+    transparent 250deg,
+    transparent 360deg
+  );
+  filter: blur(11px);
+  opacity: 0.28;
+  animation: footer-border-spin 5s linear infinite;
+}
+
+@property --footer-glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes footer-border-spin {
+  from {
+    --footer-glow-angle: 0deg;
+  }
+  to {
+    --footer-glow-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-glow::before,
+  .social-glow::after {
+    animation: none;
+  }
+
+  .social-glow {
+    transition: none;
+  }
+}
