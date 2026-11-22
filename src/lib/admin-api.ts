@@ -11,10 +11,22 @@ export type AdminDashboardData = {
     totalUsers: number;
     totalCustomers: number;
     totalVendors: number;
+    totalBlockedUsers: number;
     totalServices: number;
     pendingServiceApprovals: number;
+    approvedServices: number;
+    rejectedServices: number;
     totalBookings: number;
+    pendingBookings: number;
+    acceptedBookings: number;
+    rejectedBookings: number;
+    cancelledBookings: number;
     totalTransactions: number;
+    successfulTransactions: number;
+    successfulTransactionAmounts: Array<{
+      currency: string;
+      amount: number;
+    }>;
     premiumVendors: number;
   };
   recentUsers: Array<{
@@ -66,6 +78,11 @@ export type AdminUser = {
   createdAt: string;
 };
 
+export type AdminService = VendorService & {
+  vendorId?: string;
+  vendorEmail?: string;
+};
+
 export type AdminBooking = {
   id: string;
   serviceId: string;
@@ -93,6 +110,8 @@ export type AdminTransaction = {
   status: string;
   createdAt: string;
   stripeSessionId?: string;
+  stripeSubscriptionId?: string;
+  provider: "Stripe";
 };
 
 export class AdminApiError extends Error {
@@ -153,7 +172,7 @@ function parseMeta(value: unknown): PaginationMeta {
   };
 }
 
-function parseAdminService(value: unknown): VendorService {
+function parseAdminService(value: unknown): AdminService {
   if (!isRecord(value)) throw new AdminApiError("Unexpected service record.");
   const approval = value.approvalStatus;
   if (
@@ -180,12 +199,18 @@ function parseAdminService(value: unknown): VendorService {
     description: value.description,
     location: value.location,
     price: value.price,
-    images: value.images.filter((image): image is string => typeof image === "string"),
+    images: value.images.filter(
+      (image: unknown): image is string => typeof image === "string"
+    ),
     approvalStatus: approval,
     ...(typeof value.rejectionReason === "string"
       ? { rejectionReason: value.rejectionReason }
       : {}),
+    ...(typeof value.vendorId === "string" ? { vendorId: value.vendorId } : {}),
     ...(typeof value.vendorName === "string" ? { vendorName: value.vendorName } : {}),
+    ...(typeof value.vendorEmail === "string"
+      ? { vendorEmail: value.vendorEmail }
+      : {}),
     isActive: value.isActive,
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
@@ -247,6 +272,9 @@ function parseAdminTransaction(value: unknown): AdminTransaction {
   if (!isRecord(value) || typeof value.id !== "string") {
     throw new AdminApiError("Unexpected transaction record.");
   }
+  if (value.provider !== "Stripe") {
+    throw new AdminApiError("Unexpected transaction provider.");
+  }
   return {
     id: value.id,
     vendorId: text(value.vendorId),
@@ -258,6 +286,10 @@ function parseAdminTransaction(value: unknown): AdminTransaction {
     ...(typeof value.stripeSessionId === "string"
       ? { stripeSessionId: value.stripeSessionId }
       : {}),
+    ...(typeof value.stripeSubscriptionId === "string"
+      ? { stripeSubscriptionId: value.stripeSubscriptionId }
+      : {}),
+    provider: value.provider,
     ...(typeof value.vendorName === "string" ? { vendorName: value.vendorName } : {}),
     ...(typeof value.vendorEmail === "string" ? { vendorEmail: value.vendorEmail } : {}),
   };
@@ -315,6 +347,212 @@ function parseSuccess<T>(
   return parser(body.data);
 }
 
+function parseAdminDashboardData(value: unknown): AdminDashboardData {
+  if (!isRecord(value) || !isRecord(value.stats)) {
+    throw new AdminApiError("Unexpected dashboard response.");
+  }
+
+  const countKeys = [
+    "totalUsers",
+    "totalCustomers",
+    "totalVendors",
+    "totalBlockedUsers",
+    "totalServices",
+    "pendingServiceApprovals",
+    "approvedServices",
+    "rejectedServices",
+    "totalBookings",
+    "pendingBookings",
+    "acceptedBookings",
+    "rejectedBookings",
+    "cancelledBookings",
+    "totalTransactions",
+    "successfulTransactions",
+    "premiumVendors",
+  ] as const;
+  const stats = value.stats;
+  const count = (key: (typeof countKeys)[number]): number => {
+    const value = stats[key];
+    if (!isFiniteNumber(value) || !Number.isInteger(value) || value < 0) {
+      throw new AdminApiError("Unexpected dashboard statistics.");
+    }
+    return value;
+  };
+  for (const key of countKeys) {
+    count(key);
+  }
+
+  if (!Array.isArray(stats.successfulTransactionAmounts)) {
+    throw new AdminApiError("Unexpected transaction totals.");
+  }
+  const successfulTransactionAmounts = stats.successfulTransactionAmounts.map(
+    (item) => {
+      if (
+        !isRecord(item) ||
+        typeof item.currency !== "string" ||
+        !item.currency.trim() ||
+        !isFiniteNumber(item.amount)
+      ) {
+        throw new AdminApiError("Unexpected transaction totals.");
+      }
+      return { currency: item.currency, amount: item.amount };
+    }
+  );
+
+  const recentUsers = parseDashboardRows(
+    value.recentUsers,
+    (row) => {
+      const role: AdminDashboardData["recentUsers"][number]["role"] | null =
+        row.role === "customer" || row.role === "vendor" || row.role === "admin"
+          ? row.role
+          : null;
+      if (
+        typeof row.id !== "string" ||
+        typeof row.name !== "string" ||
+        typeof row.email !== "string" ||
+        typeof row.createdAt !== "string" ||
+        role === null
+      ) {
+        throw new AdminApiError("Unexpected recent user record.");
+      }
+      const roles: AdminDashboardData["recentUsers"][number]["roles"] =
+        Array.isArray(row.roles)
+          ? row.roles.filter(
+              (item): item is "customer" | "vendor" | "admin" =>
+                item === "customer" || item === "vendor" || item === "admin"
+            )
+          : [role];
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        role,
+        roles: roles.length ? roles : [role],
+        createdAt: row.createdAt,
+        ...(typeof row.image === "string" ? { image: row.image } : {}),
+      };
+    },
+    "recent users"
+  );
+  const recentServices = parseDashboardRows(
+    value.recentServices,
+    (row) => {
+      if (
+        typeof row.id !== "string" ||
+        typeof row.title !== "string" ||
+        typeof row.category !== "string" ||
+        typeof row.approvalStatus !== "string" ||
+        typeof row.createdAt !== "string"
+      ) {
+        throw new AdminApiError("Unexpected recent service record.");
+      }
+      return {
+        id: row.id,
+        title: row.title,
+        category: row.category,
+        approvalStatus: row.approvalStatus,
+        createdAt: row.createdAt,
+        ...(typeof row.vendorName === "string"
+          ? { vendorName: row.vendorName }
+          : {}),
+        ...(typeof row.image === "string" ? { image: row.image } : {}),
+      };
+    },
+    "recent services"
+  );
+  const recentBookings = parseDashboardRows(
+    value.recentBookings,
+    (row) => {
+      if (
+        typeof row.id !== "string" ||
+        typeof row.serviceId !== "string" ||
+        typeof row.status !== "string" ||
+        typeof row.createdAt !== "string" ||
+        typeof row.eventDate !== "string"
+      ) {
+        throw new AdminApiError("Unexpected recent booking record.");
+      }
+      return {
+        id: row.id,
+        serviceId: row.serviceId,
+        status: row.status,
+        createdAt: row.createdAt,
+        eventDate: row.eventDate,
+      };
+    },
+    "recent bookings"
+  );
+  const recentTransactions = parseDashboardRows(
+    value.recentTransactions,
+    (row) => {
+      if (
+        typeof row.id !== "string" ||
+        typeof row.plan !== "string" ||
+        !isFiniteNumber(row.amount) ||
+        typeof row.currency !== "string" ||
+        typeof row.status !== "string" ||
+        typeof row.createdAt !== "string"
+      ) {
+        throw new AdminApiError("Unexpected recent transaction record.");
+      }
+      return {
+        id: row.id,
+        plan: row.plan,
+        amount: row.amount,
+        currency: row.currency,
+        status: row.status,
+        createdAt: row.createdAt,
+        ...(typeof row.vendorName === "string"
+          ? { vendorName: row.vendorName }
+          : {}),
+      };
+    },
+    "recent transactions"
+  );
+
+  return {
+    stats: {
+      totalUsers: count("totalUsers"),
+      totalCustomers: count("totalCustomers"),
+      totalVendors: count("totalVendors"),
+      totalBlockedUsers: count("totalBlockedUsers"),
+      totalServices: count("totalServices"),
+      pendingServiceApprovals: count("pendingServiceApprovals"),
+      approvedServices: count("approvedServices"),
+      rejectedServices: count("rejectedServices"),
+      totalBookings: count("totalBookings"),
+      pendingBookings: count("pendingBookings"),
+      acceptedBookings: count("acceptedBookings"),
+      rejectedBookings: count("rejectedBookings"),
+      cancelledBookings: count("cancelledBookings"),
+      totalTransactions: count("totalTransactions"),
+      successfulTransactions: count("successfulTransactions"),
+      successfulTransactionAmounts,
+      premiumVendors: count("premiumVendors"),
+    },
+    recentUsers,
+    recentServices,
+    recentBookings,
+    recentTransactions,
+  };
+}
+
+function parseDashboardRows<T>(
+  value: unknown,
+  parseRow: (row: Record<string, unknown>) => T,
+  label: string
+): T[] {
+  if (!Array.isArray(value)) {
+    throw new AdminApiError(`Unexpected ${label} response.`);
+  }
+  return value.map((row) => {
+    if (!isRecord(row)) {
+      throw new AdminApiError(`Unexpected ${label} record.`);
+    }
+    return parseRow(row);
+  });
+}
+
 function parsePage<T>(
   body: unknown,
   parser: (value: unknown) => T,
@@ -349,7 +587,7 @@ export async function getAdminDashboard(signal?: AbortSignal): Promise<AdminDash
     signal,
     fallbackMessage: "Unable to load platform statistics.",
   });
-  return parseSuccess(body, (value) => value as AdminDashboardData, "Unexpected dashboard response.");
+  return parseSuccess(body, parseAdminDashboardData, "Unexpected dashboard response.");
 }
 
 export async function getAdminUsers(
@@ -382,6 +620,7 @@ export async function setAdminUserBlocked(id: string, isBlocked: boolean): Promi
 
 export async function getAdminServices(
   query: AdminPageQuery & {
+    vendor?: string;
     approvalStatus?: string;
     isActive?: string;
     category?: string;
@@ -397,7 +636,7 @@ export async function getAdminServices(
 
 export async function setAdminServiceApproval(
   id: string,
-  approvalStatus: "pending" | "approved" | "rejected",
+  approvalStatus: "approved" | "rejected",
   rejectionReason?: string
 ): Promise<VendorService> {
   const body = await request(`/api/admin/services/${encodeURIComponent(id)}/approval`, {

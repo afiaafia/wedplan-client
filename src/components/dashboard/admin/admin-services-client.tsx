@@ -126,12 +126,12 @@ export default function AdminServicesClient() {
     setBusyId(service.id);
     try {
       const updated = await setAdminServiceApproval(service.id, next, reason);
-      setServices((current) =>
-        current.map((item) =>
+      setServices((current: AdminService[]) =>
+        current.map((item: AdminService) =>
           item.id === updated.id ? mergeUpdatedService(item, updated) : item
         )
       );
-      setDetail((current) =>
+      setDetail((current: AdminService | null) =>
         current?.id === updated.id
           ? mergeUpdatedService(current, updated)
           : current
@@ -167,12 +167,12 @@ export default function AdminServicesClient() {
     setBusyId(service.id);
     try {
       const updated = await setAdminServiceActive(service.id, next);
-      setServices((current) =>
-        current.map((item) =>
+      setServices((current: AdminService[]) =>
+        current.map((item: AdminService) =>
           item.id === updated.id ? mergeUpdatedService(item, updated) : item
         )
       );
-      setDetail((current) =>
+      setDetail((current: AdminService | null) =>
         current?.id === updated.id
           ? mergeUpdatedService(current, updated)
           : current
@@ -204,7 +204,9 @@ export default function AdminServicesClient() {
     setBusyId(service.id);
     try {
       await deleteAdminService(service.id);
-      setServices((current) => current.filter((item) => item.id !== service.id));
+      setServices((current: AdminService[]) =>
+        current.filter((item: AdminService) => item.id !== service.id)
+      );
       setDetail(null);
       showToast({ title: "Service deleted", description: service.title });
       setNonce((value) => value + 1);
@@ -503,7 +505,7 @@ export default function AdminServicesClient() {
             </div>
             {detail.images.length > 0 && (
               <div className="mt-5 flex gap-2 overflow-x-auto">
-                {detail.images.map((image) => (
+                {detail.images.map((image: string) => (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     key={image}
