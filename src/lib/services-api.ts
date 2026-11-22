@@ -161,6 +161,9 @@ export async function getPublicService(
 export function formatPrice(price: number): string {
   const safePrice = Number.isFinite(price) ? price : 0;
   return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(safePrice);
 }
