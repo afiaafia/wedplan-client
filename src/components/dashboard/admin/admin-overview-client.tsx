@@ -7,16 +7,31 @@ import {
   getAdminDashboard,
   type AdminDashboardData,
 } from "@/lib/admin-api";
-import { formatEventDate, getInitials } from "@/lib/vendor-dashboard";
+import {
+  formatCurrencyAmount,
+  formatEventDate,
+  getInitials,
+} from "@/lib/vendor-dashboard";
 
-const STAT_LABELS: Array<{ key: keyof AdminDashboardData["stats"]; label: string }> = [
+const STAT_LABELS: Array<{
+  key: keyof Omit<AdminDashboardData["stats"], "successfulTransactionAmounts">;
+  label: string;
+}> = [
   { key: "totalUsers", label: "Total users" },
   { key: "totalCustomers", label: "Customers" },
   { key: "totalVendors", label: "Vendors" },
+  { key: "totalBlockedUsers", label: "Blocked users" },
   { key: "totalServices", label: "Total services" },
-  { key: "pendingServiceApprovals", label: "Pending approvals" },
+  { key: "pendingServiceApprovals", label: "Pending services" },
+  { key: "approvedServices", label: "Approved services" },
+  { key: "rejectedServices", label: "Rejected services" },
   { key: "totalBookings", label: "Total bookings" },
+  { key: "pendingBookings", label: "Pending bookings" },
+  { key: "acceptedBookings", label: "Accepted bookings" },
+  { key: "rejectedBookings", label: "Rejected bookings" },
+  { key: "cancelledBookings", label: "Cancelled bookings" },
   { key: "totalTransactions", label: "Transactions" },
+  { key: "successfulTransactions", label: "Successful transactions" },
   { key: "premiumVendors", label: "Premium vendors" },
 ];
 
@@ -83,7 +98,7 @@ export default function AdminOverviewClient() {
       )}
 
       {loading && !data ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
           {STAT_LABELS.map((item) => (
             <div
               key={item.key}
@@ -93,7 +108,7 @@ export default function AdminOverviewClient() {
         </div>
       ) : data ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
             {STAT_LABELS.map((item) => (
               <div
                 key={item.key}
@@ -108,6 +123,33 @@ export default function AdminOverviewClient() {
               </div>
             ))}
           </div>
+
+          <section className="rounded-2xl border border-border/70 bg-card/80 p-5">
+            <h3 className="font-serif text-lg text-foreground">
+              Successful transaction volume
+            </h3>
+            {data.stats.successfulTransactionAmounts.length ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {data.stats.successfulTransactionAmounts.map((total) => (
+                  <div
+                    key={total.currency}
+                    className="rounded-xl border border-border/60 bg-background/50 p-4"
+                  >
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted">
+                      {total.currency.toUpperCase()}
+                    </p>
+                    <p className="mt-2 font-serif text-2xl text-foreground">
+                      {formatCurrencyAmount(total.amount, total.currency)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
+                No successful transactions have been recorded.
+              </p>
+            )}
+          </section>
 
           <div className="grid gap-5 xl:grid-cols-2">
             <section className="rounded-2xl border border-border/70 bg-card/80 p-5">
@@ -194,7 +236,7 @@ export default function AdminOverviewClient() {
                 items={data.recentTransactions.map((transaction) => ({
                   id: transaction.id,
                   primary: `${transaction.plan} · ${transaction.status}`,
-                  secondary: `${transaction.currency.toUpperCase()} ${transaction.amount} · ${transaction.vendorName ?? "Vendor"}`,
+                  secondary: `${formatCurrencyAmount(transaction.amount, transaction.currency)} · ${transaction.vendorName ?? "Vendor"}`,
                   meta: formatEventDate(transaction.createdAt),
                 }))}
               />
