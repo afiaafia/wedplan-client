@@ -25,7 +25,7 @@ WedPlan is a wedding planning marketplace where couples discover and book weddin
 - Email/password and Google authentication via Better Auth, including customer/vendor registration, password policy, logout, session refresh persistence, blocked-account handling, and role-based redirects.
 - Customer dashboard: booking statistics, booking history/detail, pending-booking cancellation, and profile settings with server-side ImgBB uploads.
 - Vendor dashboard: service CRUD, availability controls, booking request accept/reject, subscription status, and Stripe Checkout for Premium.
-- Admin dashboard: platform statistics, user search/block/unblock, service moderation, booking monitoring, and read-only transaction history.
+- Admin dashboard: platform and per-currency payment statistics, multi-role user details and block controls, vendor-aware service moderation, booking monitoring, and read-only Stripe transaction details.
 
 ## Installation
 
@@ -67,8 +67,17 @@ Use pnpm only; other package managers are not used by this project.
 | `NEXT_PUBLIC_BETTER_AUTH_URL` | Browser | Better Auth origin (same frontend origin in production; backend origin locally) |
 | `NEXT_PUBLIC_SITE_URL` | Browser | Frontend origin used in user-facing links |
 | `API_INTERNAL_URL` | Server only | Backend origin used by Next.js API rewrites and server components |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Browser | Optional footer contact email |
+| `NEXT_PUBLIC_INSTAGRAM_URL` | Browser | Optional validated HTTPS/HTTP Instagram profile URL |
+| `NEXT_PUBLIC_FACEBOOK_URL` | Browser | Optional validated HTTPS/HTTP Facebook profile URL |
+| `NEXT_PUBLIC_PINTEREST_URL` | Browser | Optional validated HTTPS/HTTP Pinterest profile URL |
+| `NEXT_PUBLIC_X_URL` | Browser | Optional validated HTTPS/HTTP X profile URL |
 
 `NEXT_PUBLIC_*` values are embedded in the browser bundle. Never place secrets in them. Secrets such as the Better Auth secret, MongoDB URI, ImgBB key, and Stripe secret key belong only on the backend. See `.env.example` for local defaults.
+
+## JWT bearer authentication
+
+The browser continues to use secure Better Auth cookies for Google/email login. For protected API calls, the client can request a short-lived bearer token with `POST /api/me/token` and store it only in memory. The token complement is 15 minutes, is cleared on sign-out, and the backend revalidates the user role and blocked state on every bearer request.
 
 ## Project structure
 
