@@ -35,16 +35,6 @@ const categoryLinks = [
   { label: "Wedding Fashion", icon: Shirt },
 ];
 
-const socialLinks = [
-  { name: "Instagram", href: "https://www.instagram.com/" },
-  { name: "Facebook", href: "https://www.facebook.com/" },
-  { name: "YouTube", href: "https://www.youtube.com/" },
-  { name: "X", href: "https://x.com/" },
-  { name: "Pinterest", href: "https://www.pinterest.com/" },
-  { name: "TikTok", href: "https://www.tiktok.com/" },
-];
-
-
 function SocialOutlineIcon({ name }: { name: string }) {
   const common = {
     fill: "none",
@@ -62,7 +52,7 @@ function SocialOutlineIcon({ name }: { name: string }) {
       aria-hidden="true"
       {...common}
     >
-      {name === "Instagram" && (
+      {name === "instagram" && (
         <>
           <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
           <circle cx="12" cy="12" r="4" />
@@ -70,18 +60,18 @@ function SocialOutlineIcon({ name }: { name: string }) {
         </>
       )}
 
-      {name === "Facebook" && (
+      {name === "facebook" && (
         <path d="M14.2 20v-7.3h2.5l.4-3h-2.9V7.8c0-.9.3-1.5 1.5-1.5h1.5V3.6c-.7-.1-1.4-.2-2.2-.2-2.3 0-3.9 1.4-3.9 4v2.3H8.5v3h2.6V20" />
       )}
 
-      {name === "YouTube" && (
+      {name === "youtube" && (
         <>
           <rect x="2.8" y="5.5" width="18.4" height="13" rx="4" />
           <path d="m10 9 5 3-5 3z" />
         </>
       )}
 
-      {name === "X" && (
+      {name === "x" && (
         <>
           <path d="M4 3.5 20 20.5" />
           <path d="M20 3.5 4 20.5" />
@@ -89,7 +79,7 @@ function SocialOutlineIcon({ name }: { name: string }) {
         </>
       )}
 
-      {name === "Pinterest" && (
+      {name === "pinterest" && (
         <>
           <circle cx="12" cy="12" r="9" />
           <path d="M10 20.5 12.2 13c-.5-1-.6-2.2.1-3.2.8-1.2 2.5-1.5 3.5-.6 1.1 1 .8 2.8-.1 4-.8 1.1-2.2 1.5-3.3.9" />
@@ -97,7 +87,7 @@ function SocialOutlineIcon({ name }: { name: string }) {
         </>
       )}
 
-      {name === "TikTok" && (
+      {name === "tiktok" && (
         <>
           <path d="M14 3.5v11.2a3.5 3.5 0 1 1-3-3.5" />
           <path d="M14 3.5c.4 2.5 2 4.1 4.5 4.5" />
@@ -133,7 +123,7 @@ function FooterLink({
 }
 
 export default function Footer() {
-  const { email } = getFooterContact();
+  const { email, socials } = getFooterContact();
 
   return (
     <footer className="relative px-4 pb-6 pt-12 sm:px-6 lg:px-10">
@@ -320,26 +310,27 @@ export default function Footer() {
                     Follow WedPlan
                   </h4>
 
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {socialLinks.map(({ name, href }) => (
-                      <a
-                        key={name}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Visit ${name}`}
-                        title={name}
-                        className="social-glow group relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/80 bg-white/55 text-primary shadow-[0_5px_18px_rgba(74,43,48,0.06)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-white/90 hover:text-[#603541] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      >
-                        <SocialOutlineIcon name={name} />
-                      </a>
-                    ))}
-                  </div>
-
-                  <p className="mt-4 max-w-xs text-xs leading-5 text-muted">
-                    Follow your favourite platforms and stay inspired for
-                    your special day.
-                  </p>
+                  {socials.length > 0 ? (
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      {socials.map(({ label, icon, href }) => (
+                        <a
+                          key={label}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Visit ${label}`}
+                          title={label}
+                          className="social-glow group relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/80 bg-white/55 text-primary shadow-[0_5px_18px_rgba(74,43,48,0.06)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-white/90 hover:text-[#603541] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        >
+                          <SocialOutlineIcon name={icon} />
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-4 max-w-xs text-xs leading-5 text-muted">
+                      Social profile links are not configured yet.
+                    </p>
+                  )}
                 </div>
               </div>
 
