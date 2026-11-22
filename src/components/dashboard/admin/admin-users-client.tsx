@@ -369,7 +369,7 @@ export default function AdminUsersClient() {
               </button>
             </div>
             <dl className="mt-5 space-y-3 text-sm">
-              <DetailRow label="Role" value={detail.role} />
+              <DetailRow label="Roles" value={detail.roles.join(", ")} />
               <DetailRow label="Subscription plan" value={detail.subscriptionPlan} />
               <DetailRow
                 label="Account status"
