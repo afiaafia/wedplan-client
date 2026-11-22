@@ -1,3 +1,5 @@
+import { getBearerAuthHeaders } from "./api-access-token.ts";
+
 export const SERVICE_CATEGORIES = [
   "Photography",
   "Videography",
@@ -135,9 +137,12 @@ export async function getPublicService(
   id: string,
   signal?: AbortSignal
 ): Promise<ServiceDetail> {
+  const headers = await getBearerAuthHeaders({
+    Accept: "application/json",
+  });
   const response = await fetch(
     `${API_BASE_URL}/api/services/${encodeURIComponent(id)}`,
-    { signal, cache: "no-store" }
+    { signal, cache: "no-store", credentials: "include", headers }
   );
   const body = (await parseResponse(response)) as Partial<ServiceResponse> & {
     success?: boolean;

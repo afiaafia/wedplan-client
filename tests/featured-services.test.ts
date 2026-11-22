@@ -10,6 +10,10 @@ import {
   parseFeaturedServicesResponse,
   toFeaturedService,
 } from "../src/lib/featured-services-api.ts";
+import {
+  clearWedPlanBearerToken,
+} from "../src/lib/api-access-token.ts";
+import { getPublicService } from "../src/lib/services-api.ts";
 
 type RequestRecord = { url: string; init?: RequestInit };
 
@@ -214,4 +218,45 @@ test("service cards link to the existing service details route", () => {
     "/services/65b000000000000000000001"
   );
   assert.equal(featuredServiceHref("a/b"), "/services/a%2Fb");
+});
+
+test("service detail requests send existing bearer auth and include session credentials", async () => {
+  const originalFetch = globalThis.fetch;
+  const requests: RequestRecord[] = [];
+  clearWedPlanBearerToken();
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    requests.push({ url, init });
+
+    if (url === "/api/me/token") {
+      return new Response(
+        JSON.stringify({ success: true, data: { accessToken: "test-token" } }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: { id: "65b000000000000000000001", title: "Garden Photographer" },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  }) as typeof fetch;
+
+  try {
+    const service = await getPublicService("65b000000000000000000001");
+    const detailRequest = requests[1];
+
+    assert.equal(service.title, "Garden Photographer");
+    assert.equal(detailRequest?.url.endsWith("/api/services/65b000000000000000000001"), true);
+    assert.equal(detailRequest?.init?.credentials, "include");
+    assert.equal(
+      new Headers(detailRequest?.init?.headers).get("Authorization"),
+      "Bearer test-token"
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    clearWedPlanBearerToken();
+  }
 });

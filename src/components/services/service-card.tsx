@@ -30,7 +30,12 @@ export default function ServiceCard({ service }: { service: PublicService }) {
   const detailsHref = `/services/${encodeURIComponent(service.id)}`;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_8px_30px_rgba(48,39,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_18px_45px_rgba(48,39,42,0.11)] motion-reduce:hover:translate-y-0">
+    <Link
+      href={detailsHref}
+      aria-label={`View details for ${service.title}`}
+      className="group block h-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+    >
+      <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_8px_30px_rgba(48,39,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_18px_45px_rgba(48,39,42,0.11)] motion-reduce:hover:translate-y-0">
       <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -111,9 +116,8 @@ export default function ServiceCard({ service }: { service: PublicService }) {
             </p>
           </div>
 
-          <Link
-            href={detailsHref}
-            aria-label={`View details for ${service.title}`}
+          <span
+            aria-hidden="true"
             className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             View Details
@@ -122,9 +126,10 @@ export default function ServiceCard({ service }: { service: PublicService }) {
               aria-hidden="true"
               className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
             />
-          </Link>
+          </span>
         </div>
       </div>
-    </article>
+      </article>
+    </Link>
   );
 }
