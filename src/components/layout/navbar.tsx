@@ -110,6 +110,117 @@ export default function Navbar() {
       .slice(0, 2)
       .toUpperCase() || "U";
 
+  if (pathname === "/vendor/sign-in") {
+    return (
+      <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/70 bg-card/85 backdrop-blur-xl">
+        <div className="mx-auto flex h-[72px] max-w-[1380px] items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* WedPlan logo on the left */}
+          <Link
+            href="/"
+            className="group flex shrink-0 items-center gap-2.5"
+            onClick={() => setMobileOpen(false)}
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-md shadow-primary/20 transition-transform group-hover:rotate-[-8deg]">
+              <Heart size={19} strokeWidth={1.8} />
+            </span>
+
+            <span className="font-serif text-[26px] font-semibold tracking-tight text-foreground">
+              WedPlan<span className="text-primary">.</span>
+            </span>
+          </Link>
+
+          {/* Minimal navigation on right */}
+          <div className="hidden items-center gap-3 sm:flex">
+            <ThemeToggle />
+            <Link
+              href="/services"
+              className="px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-primary"
+            >
+              Browse Services
+            </Link>
+            <Link
+              href="/sign-in"
+              className="rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm transition-all hover:border-primary/50 hover:bg-secondary/70"
+            >
+              Customer Sign In
+            </Link>
+          </div>
+
+          {/* Responsive mobile menu control */}
+          <div className="flex items-center gap-2 sm:hidden">
+            <ThemeToggle />
+            <button
+              ref={mobileButtonRef}
+              type="button"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              className="group flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/75 shadow-sm backdrop-blur-xl transition-all"
+            >
+              <span className="relative block h-5 w-6">
+                <motion.span
+                  animate={mobileOpen ? { top: "9px", rotate: 45, width: "22px" } : { top: "5px", rotate: 0, width: "22px" }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute right-0 h-[2px] rounded-full bg-primary"
+                />
+                <motion.span
+                  animate={mobileOpen ? { top: "9px", rotate: -45, width: "22px" } : { top: "15px", rotate: 0, width: "14px" }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute right-0 h-[2px] rounded-full bg-primary"
+                />
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile dropdown */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              ref={mobileMenuRef}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.15 }}
+              className="border-t border-border/70 bg-card/95 px-4 py-4 sm:hidden"
+            >
+              <div className="space-y-1">
+                <Link
+                  href="/"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-2.5 text-sm font-medium text-muted hover:bg-secondary hover:text-primary"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/services"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-2.5 text-sm font-medium text-muted hover:bg-secondary hover:text-primary"
+                >
+                  Browse Services
+                </Link>
+                <Link
+                  href="/sign-in"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-2.5 text-sm font-medium text-muted hover:bg-secondary hover:text-primary"
+                >
+                  Customer Sign In
+                </Link>
+                <Link
+                  href="/sign-up?role=vendor"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-2.5 text-sm font-semibold text-primary hover:bg-secondary"
+                >
+                  Become a Vendor
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+    );
+  }
+
   return (
     <header className="fixed left-0 right-0 top-0 z-50 px-4 pt-4 sm:px-6">
       <nav className="mx-auto flex h-[72px] max-w-[1380px] items-center justify-between rounded-2xl border border-white/80 bg-white/65 px-5 shadow-[0_8px_40px_rgba(48,39,42,0.07)] backdrop-blur-2xl backdrop-saturate-150 sm:px-8">
@@ -252,6 +363,13 @@ export default function Navbar() {
           ) : (
             <>
               <Link
+                href="/vendor/sign-in"
+                className="px-3.5 py-2 text-xs font-semibold tracking-wide text-muted transition-colors hover:text-primary"
+              >
+                Sign in as Vendor
+              </Link>
+
+              <Link
                 href="/sign-in"
                 className="px-4 py-2.5 text-sm font-semibold text-muted transition-colors hover:text-primary"
               >
@@ -385,22 +503,34 @@ export default function Navbar() {
                     </button>
                   </>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <Link
-                      href="/sign-in"
-                      onClick={() => setMobileOpen(false)}
-                      className="rounded-full border border-border py-3 text-center text-sm font-semibold text-primary"
-                    >
-                      Sign In
-                    </Link>
+                  <div className="space-y-2.5">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Link
+                        href="/sign-in"
+                        onClick={() => setMobileOpen(false)}
+                        className="rounded-full border border-border py-3 text-center text-sm font-semibold text-primary"
+                      >
+                        Sign In
+                      </Link>
 
-                    <Link
-                      href="/sign-up"
-                      onClick={() => setMobileOpen(false)}
-                      className="rounded-full bg-primary py-3 text-center text-sm font-semibold text-white"
-                    >
-                      Sign Up
-                    </Link>
+                      <Link
+                        href="/sign-up"
+                        onClick={() => setMobileOpen(false)}
+                        className="rounded-full bg-primary py-3 text-center text-sm font-semibold text-white"
+                      >
+                        Sign Up
+                      </Link>
+                    </div>
+
+                    <div className="pt-1 text-center">
+                      <Link
+                        href="/vendor/sign-in"
+                        onClick={() => setMobileOpen(false)}
+                        className="text-xs font-semibold text-primary transition-colors hover:text-primary-hover hover:underline"
+                      >
+                        Sign in as Vendor &rarr;
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
