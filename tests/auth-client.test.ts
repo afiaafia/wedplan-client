@@ -46,6 +46,7 @@ test("client password rules mirror the backend policy", () => {
 
 test("Google post-auth destinations stay inside WedPlan", () => {
   assert.equal(isAllowedPostAuthDestination("/dashboard/customer/bookings"), true);
+  assert.equal(isAllowedPostAuthDestination("/dashboard/vendor"), true);
   assert.equal(isAllowedPostAuthDestination("/services/123?booking=1"), true);
   assert.equal(isAllowedPostAuthDestination("https://evil.example"), false);
   assert.equal(isAllowedPostAuthDestination("//evil.example/services"), false);

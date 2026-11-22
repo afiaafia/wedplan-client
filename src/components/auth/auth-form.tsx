@@ -619,15 +619,28 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
                 </p>
               </>
             ) : (
-              <p className="mt-8 text-center text-sm text-muted">
-                {isSignUp ? "Already have an account?" : "New to WedPlan?"}{" "}
-                <Link
-                  href={isSignUp ? "/sign-in" : "/sign-up"}
-                  className="font-semibold text-primary transition-colors hover:text-primary-hover"
-                >
-                  {isSignUp ? "Sign in" : "Create an account"}
-                </Link>
-              </p>
+              <div className="mt-8 space-y-2 text-center text-sm text-muted">
+                <p>
+                  {isSignUp ? "Already have an account?" : "New to WedPlan?"}{" "}
+                  <Link
+                    href={isSignUp ? "/sign-in" : "/sign-up"}
+                    className="font-semibold text-primary transition-colors hover:text-primary-hover"
+                  >
+                    {isSignUp ? "Sign in" : "Create an account"}
+                  </Link>
+                </p>
+                {!isSignUp && (
+                  <p className="text-xs">
+                    Are you a wedding vendor?{" "}
+                    <Link
+                      href="/vendor/sign-in"
+                      className="font-semibold text-primary transition-colors hover:text-primary-hover hover:underline underline-offset-2"
+                    >
+                      Sign in as Vendor
+                    </Link>
+                  </p>
+                )}
+              </div>
             )}
 
             <p className="mt-8 text-center text-xs leading-5 text-muted/80">

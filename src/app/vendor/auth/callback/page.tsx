@@ -22,8 +22,12 @@ export default async function VendorAuthCallbackPage({
     redirect("/vendor/sign-in?error=session_missing");
   }
 
+  if (session.user.isBlocked === true) {
+    redirect("/blocked");
+  }
+
   const role = normalizeRole(session.user.role);
-  if (role !== "vendor" && role !== "admin") {
+  if (role !== "vendor") {
     return <VendorAuthRejection />;
   }
 
