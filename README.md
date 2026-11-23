@@ -28,30 +28,6 @@ WedPlan is a role-aware wedding planning platform for couples, vendors, and admi
 
 ## Project preview
 
-<table>
-  <tr>
-    <td width="50%">
-      <img src="./docs/live-qa-homepage-desktop.png" alt="WedPlan homepage on desktop">
-      <p align="center"><strong>Homepage · desktop</strong></p>
-    </td>
-    <td width="50%">
-      <img src="./docs/live-qa-homepage-mobile.png" alt="WedPlan homepage on mobile">
-      <p align="center"><strong>Homepage · mobile</strong></p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <img src="./docs/live-qa-services-desktop.png" alt="WedPlan service discovery on desktop">
-      <p align="center"><strong>Service discovery · desktop</strong></p>
-    </td>
-    <td width="50%">
-      <img src="./docs/live-qa-sign-in-mobile.png" alt="WedPlan sign-in on mobile">
-      <p align="center"><strong>Sign-in · mobile</strong></p>
-    </td>
-  </tr>
-</table>
-
-These captures are the existing local QA previews; authenticated dashboard previews were not available.
 
 ---
 
