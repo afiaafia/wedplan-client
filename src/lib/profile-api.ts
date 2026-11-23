@@ -53,12 +53,16 @@ function messageForCode(code: string | undefined, fallback: string): string {
       return "Profile image uploads are not configured on the server.";
     case "IMAGE_UPLOAD_FAILED":
       return "The image could not be uploaded. Please try another file.";
+    case "GOOGLE_SIGN_IN_REQUIRED":
+      return "Sign in with Google before setting a password.";
+    case "PASSWORD_ALREADY_SET":
+      return "A password is already set for this account.";
     default:
       return fallback;
   }
 }
 
-async function requestProfileApi(
+async function requestProfileApi<TResponse extends object = ProfileResponse>(
   path: string,
   options: {
     method: "GET" | "PATCH" | "POST";
@@ -66,7 +70,7 @@ async function requestProfileApi(
     signal?: AbortSignal;
     fallbackMessage: string;
   }
-): Promise<ProfileResponse> {
+): Promise<TResponse> {
   let response: Response;
 
   try {
@@ -125,7 +129,7 @@ async function requestProfileApi(
     );
   }
 
-  return (body as { data: ProfileResponse }).data;
+  return (body as { data: TResponse }).data;
 }
 
 export function getProfile(signal?: AbortSignal): Promise<ProfileResponse> {
@@ -152,6 +156,16 @@ export function updateProfile(input: {
     method: "PATCH",
     body: input,
     fallbackMessage: "Unable to update your profile.",
+  });
+}
+
+export function setProfilePassword(
+  newPassword: string
+): Promise<{ passwordSet: boolean }> {
+  return requestProfileApi<{ passwordSet: boolean }>("/api/me/password", {
+    method: "POST",
+    body: { newPassword },
+    fallbackMessage: "Unable to set a password for this account.",
   });
 }
 

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, UserRound } from "lucide-react";
 import { requireSession } from "@/lib/auth-server";
 import ProfileSettingsForm from "@/components/settings/profile-settings-form";
+import AdminSetPasswordForm from "@/components/settings/admin-set-password-form";
 import { getPrimaryRole } from "@/lib/roles";
 
 export const instant = false;
@@ -55,6 +56,11 @@ export default async function SettingsPage() {
             role={profileRole}
           />
         </div>
+        {profileRole === "admin" && (
+          <div className="mt-6">
+            <AdminSetPasswordForm />
+          </div>
+        )}
       </div>
     </main>
   );
