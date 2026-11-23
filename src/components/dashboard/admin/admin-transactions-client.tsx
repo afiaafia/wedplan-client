@@ -83,20 +83,20 @@ export default function AdminTransactionsClient() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/70 bg-card/80 p-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/80 p-4 sm:flex-row sm:flex-wrap sm:items-center">
         <input
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search transactions"
           aria-label="Search transactions"
-          className="min-w-[220px] flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-[220px] sm:flex-1"
         />
         <select
           value={status}
           onChange={(event) => setStatus(event.target.value)}
           aria-label="Filter by transaction status"
-          className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary sm:w-auto"
         >
           <option value="">All statuses</option>
           {TRANSACTION_STATUSES.map((item) => (
@@ -110,13 +110,13 @@ export default function AdminTransactionsClient() {
           onChange={(event) => setVendorId(event.target.value)}
           placeholder="Vendor ID"
           aria-label="Filter by vendor ID"
-          className="w-48 rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary sm:w-48"
         />
         <button
           type="button"
           onClick={() => setNonce((value) => value + 1)}
           aria-label="Refresh transactions"
-          className="rounded-xl border border-border p-2.5 text-muted transition hover:text-primary"
+          className="flex h-11 w-11 shrink-0 items-center justify-center self-end rounded-xl border border-border text-muted transition hover:text-primary sm:self-auto"
         >
           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
         </button>
@@ -131,7 +131,7 @@ export default function AdminTransactionsClient() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/80">
+      <div className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card/80">
         {loading && transactions.length === 0 ? (
           <div className="flex items-center justify-center gap-2 px-4 py-16 text-sm text-muted">
             <Loader2 size={16} className="animate-spin" /> Loading transactions...
@@ -141,7 +141,8 @@ export default function AdminTransactionsClient() {
             No transactions match these filters.
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="hidden overflow-x-auto lg:block">
             <table className="w-full min-w-[1180px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted">
@@ -214,12 +215,80 @@ export default function AdminTransactionsClient() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+            <div className="space-y-3 p-3 lg:hidden">
+              {transactions.map((transaction) => (
+                <article
+                  key={transaction.id}
+                  className="rounded-xl border border-border/70 bg-background/60 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-xs text-muted">Transaction</p>
+                      <p className="mt-1 break-all font-mono text-sm font-semibold text-foreground">
+                        {transaction.id.slice(-12)}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
+                        transaction.status === "completed"
+                          ? "bg-success/15 text-success"
+                          : transaction.status === "failed" ||
+                              transaction.status === "cancelled" ||
+                              transaction.status === "refunded"
+                            ? "bg-error/15 text-error"
+                            : "bg-accent/15 text-accent"
+                      }`}
+                    >
+                      {transaction.status}
+                    </span>
+                  </div>
+                  <p className="mt-3 break-words font-medium text-foreground">
+                    {transaction.vendorName || "Vendor"}
+                  </p>
+                  <p className="break-all text-xs text-muted">{transaction.vendorEmail || ""}</p>
+                  <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
+                    <div className="min-w-0">
+                      <dt className="text-muted">Plan</dt>
+                      <dd className="mt-1 break-words font-medium capitalize text-foreground">{transaction.plan}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted">Amount</dt>
+                      <dd className="mt-1 break-words font-semibold text-foreground">
+                        {formatCurrencyAmount(transaction.amount, transaction.currency)}
+                      </dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted">Provider</dt>
+                      <dd className="mt-1 break-words font-medium capitalize text-foreground">{transaction.provider}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted">Date</dt>
+                      <dd className="mt-1 break-words font-medium text-foreground">{formatEventDate(transaction.createdAt)}</dd>
+                    </div>
+                    <div className="col-span-2 min-w-0">
+                      <dt className="text-muted">Reference</dt>
+                      <dd className="mt-1 break-all font-mono text-foreground">
+                        {transaction.stripeSessionId || "—"}
+                      </dd>
+                    </div>
+                  </dl>
+                  <button
+                    type="button"
+                    onClick={() => setDetail(transaction)}
+                    className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-muted transition hover:text-primary"
+                  >
+                    <Eye size={16} /> View transaction details
+                  </button>
+                </article>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between text-xs text-muted">
+        <div className="flex flex-col gap-3 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>
             Page {meta.page} of {meta.totalPages} · {meta.total} transactions
           </span>
@@ -228,7 +297,7 @@ export default function AdminTransactionsClient() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((value) => Math.max(1, value - 1))}
-              className="rounded-lg border border-border px-3 py-1.5 font-semibold disabled:opacity-50"
+              className="min-h-11 min-w-11 rounded-lg border border-border px-3 py-2 font-semibold disabled:opacity-50"
             >
               Previous
             </button>
@@ -236,7 +305,7 @@ export default function AdminTransactionsClient() {
               type="button"
               disabled={page >= meta.totalPages}
               onClick={() => setPage((value) => value + 1)}
-              className="rounded-lg border border-border px-3 py-1.5 font-semibold disabled:opacity-50"
+              className="min-h-11 min-w-11 rounded-lg border border-border px-3 py-2 font-semibold disabled:opacity-50"
             >
               Next
             </button>
@@ -245,18 +314,18 @@ export default function AdminTransactionsClient() {
       )}
 
       {detail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/25 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/25 p-3 backdrop-blur-sm sm:p-4">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-transaction-detail-title"
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border/70 bg-card p-6 shadow-xl"
+            className="max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-border/70 bg-card p-5 shadow-xl sm:max-h-[90vh] sm:p-6"
           >
             <div className="flex items-start justify-between gap-4">
-              <div>
+              <div className="min-w-0">
                 <h2
                   id="admin-transaction-detail-title"
-                  className="font-serif text-2xl text-foreground"
+                  className="break-words font-serif text-2xl text-foreground"
                 >
                   Transaction details
                 </h2>
@@ -268,7 +337,7 @@ export default function AdminTransactionsClient() {
                 type="button"
                 onClick={() => setDetail(null)}
                 aria-label="Close transaction details"
-                className="rounded-lg p-1.5 text-muted hover:bg-secondary"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-secondary"
               >
                 <X size={18} />
               </button>
@@ -310,7 +379,7 @@ export default function AdminTransactionsClient() {
             <button
               type="button"
               onClick={() => setDetail(null)}
-              className="mt-5 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover"
+              className="mt-5 min-h-11 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover"
             >
               Close
             </button>

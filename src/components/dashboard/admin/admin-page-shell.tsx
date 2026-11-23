@@ -14,20 +14,20 @@ export default function AdminPageShell({
   children: ReactNode;
 }) {
   return (
-    <section>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
+    <section className="min-w-0">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
+        <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-champagne">
             {eyebrow}
           </p>
-          <h1 className="mt-2 font-serif text-3xl text-foreground sm:text-4xl">
+          <h1 className="mt-2 break-words font-serif text-3xl leading-tight text-foreground sm:text-4xl">
             {title}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             {description}
           </p>
         </div>
-        {action}
+        {action && <div className="shrink-0">{action}</div>}
       </div>
       {children}
     </section>

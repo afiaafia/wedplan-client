@@ -1,35 +1,172 @@
-# WedPlan Client
+# WedPlan
 
-WedPlan is a wedding planning marketplace where couples discover and book wedding providers, vendors manage listings and booking requests, and administrators moderate the platform. This repository contains the Next.js frontend deployed on Vercel.
+<p align="center">
+  <img src="./docs/assets/wedplan-client-hero.svg" alt="WedPlan — modern wedding planning platform" width="100%">
+</p>
 
-- **Live website:** https://wedplan-client-ten.vercel.app
-- **Frontend repository:** https://github.com/afiaafia/wedplan-client.git
-- **Backend repository:** https://github.com/afiaafia/wedplan-server.git
-- **Production API:** https://wedplan-server-vcdp.onrender.com
+<p align="center">
+  <strong>Plan beautifully. Connect confidently. Celebrate completely.</strong>
+</p>
+
+<p align="center">
+  <a href="https://wedplan-client-ten.vercel.app"><strong>Live application</strong></a>
+  ·
+  <a href="#quick-start"><strong>Local setup</strong></a>
+  ·
+  <a href="#features-by-role"><strong>Features</strong></a>
+  ·
+  <a href="https://github.com/afiaafia/wedplan-server"><strong>Server repository</strong></a>
+</p>
+
+WedPlan is a role-aware wedding planning platform for couples, vendors, and administrators. Couples discover approved wedding services and request bookings, vendors publish listings and manage requests, and administrators oversee users, moderation, bookings, and verified payment records.
+
+| Live | Repository | Backend |
+| --- | --- | --- |
+| [wedplan-client-ten.vercel.app](https://wedplan-client-ten.vercel.app) | [afiaafia/wedplan-client](https://github.com/afiaafia/wedplan-client) | [afiaafia/wedplan-server](https://github.com/afiaafia/wedplan-server) |
+
+---
+
+## Project preview
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="./docs/live-qa-homepage-desktop.png" alt="WedPlan homepage on desktop">
+      <p align="center"><strong>Homepage · desktop</strong></p>
+    </td>
+    <td width="50%">
+      <img src="./docs/live-qa-homepage-mobile.png" alt="WedPlan homepage on mobile">
+      <p align="center"><strong>Homepage · mobile</strong></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="./docs/live-qa-services-desktop.png" alt="WedPlan service discovery on desktop">
+      <p align="center"><strong>Service discovery · desktop</strong></p>
+    </td>
+    <td width="50%">
+      <img src="./docs/live-qa-sign-in-mobile.png" alt="WedPlan sign-in on mobile">
+      <p align="center"><strong>Sign-in · mobile</strong></p>
+    </td>
+  </tr>
+</table>
+
+These captures are the existing local QA previews; authenticated dashboard previews were not available.
+
+---
+
+## How WedPlan works
+
+### One platform. Three experiences.
+
+<p align="center">
+  <img src="./docs/assets/wedplan-workflow.svg" alt="Customer, vendor, and administrator workflows" width="100%">
+</p>
+
+### Customer journey
+
+1. **Discover** — Browse approved services and filter by category, location, or price.
+2. **Choose** — Open a service detail page and review the listing and vendor.
+3. **Book** — Submit an event date, location, and optional message.
+4. **Track** — View booking status and pending-booking history, and cancel eligible requests.
+
+### Vendor journey
+
+1. **Join** — Register or add Vendor capability to an existing account.
+2. **Publish** — Create a service and submit it for Admin approval.
+3. **Manage** — Control availability and accept or reject booking requests.
+4. **Grow** — Review plan state and start Stripe Checkout for Premium when available.
+
+### Admin journey
+
+1. **Monitor** — Review platform-wide and recent activity.
+2. **Moderate** — Approve or reject vendor listings.
+3. **Manage** — Search accounts and use protected block/unblock controls.
+4. **Oversee** — Inspect bookings and read-only transaction records.
+
+---
+
+## Features by role
+
+### Customer
+
+- Public service browsing, search, filtering, sorting, pagination, and service details
+- Authenticated booking requests with duplicate and future-date safeguards
+- Customer booking dashboard, booking detail, and pending-request cancellation
+- Profile and profile-image management
+- Email/password and Google sign-in
+
+### Vendor
+
+- Vendor registration and multi-role account support
+- Service creation, editing, deletion, image upload, and availability controls
+- Free-plan active-service limit and Premium subscription state
+- Vendor booking list/detail and accept/reject actions
+- Stripe Checkout entry point and payment return handling
+
+### Admin
+
+- Database-backed platform statistics and recent activity
+- User search, role filtering, account-status filtering, details, and block/unblock controls
+- Vendor-aware service search and review
+- Approval/rejection, activation/deactivation, and deletion controls
+- Read-only booking oversight and transaction detail views
+
+---
 
 ## Technology stack
 
-- Next.js 16 (App Router, React 19, TypeScript)
-- Tailwind CSS 4
-- Framer Motion (with `reducedMotion="user"`)
-- Better Auth React client
-- Lucide React icons
-- Node.js test runner (TypeScript stripping)
+| Layer | Technology |
+| --- | --- |
+| Framework | Next.js 16.4.6, App Router, React 19.3 |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 4.3 |
+| Motion | Framer Motion 14 |
+| Icons | Lucide React 1.74, React Icons 5 |
+| Authentication | Better Auth 1.7.25 |
+| Data access | Authenticated frontend API clients |
+| Validation | TypeScript assertions and backend Zod validation |
+| Testing | Node.js test runner with TypeScript stripping |
+| Package manager | pnpm 12.4.2 |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["Browser<br/>Next.js 16 + React"]
+    Proxy["Next.js /api rewrite"]
+    Express["Express 5 API"]
+    Auth["Better Auth"]
+    Mongo[(MongoDB)]
+    Stripe["Stripe"]
+    ImgBB["ImgBB"]
+
+    Browser -->|"Cookies or short-lived JWT"| Proxy
+    Proxy --> Express
+    Express --> Auth
+    Express --> Mongo
+    Express -->|"Checkout + webhooks"| Stripe
+    Express -->|"Image uploads"| ImgBB
+    Auth --> Mongo
+
+    Stripe -->|"Signed webhook events"| Proxy
+    Proxy --> Express
+```
+
+Browser authentication primarily uses Better Auth cookies. The client can also request an in-memory short-lived JWT for protected API calls; the server revalidates the current user, role, and blocked state.
+
+---
+
+## Quick start
+
+### Prerequisites
+
+- Node.js 24-compatible runtime
 - pnpm 12.4.2
+- A running WedPlan server
+- MongoDB and backend credentials for full application data
 
-## Main features
-
-- Responsive homepage with hero, six wedding service categories, database-backed featured services, benefits, and how-it-works sections.
-- Public service browsing with name search, category and location filters, price sorting, pagination, URL query synchronization, skeletons, empty/error states, and image fallbacks.
-- Dynamic service detail pages with gallery, vendor summary, and authenticated booking requests.
-- Email/password and Google authentication via Better Auth, including customer/vendor registration, password policy, logout, session refresh persistence, blocked-account handling, and role-based redirects.
-- Customer dashboard: booking statistics, booking history/detail, pending-booking cancellation, and profile settings with server-side ImgBB uploads.
-- Vendor dashboard: service CRUD, availability controls, booking request accept/reject, subscription status, and Stripe Checkout for Premium.
-- Admin dashboard: platform and per-currency payment statistics, multi-role user details and block controls, vendor-aware service moderation, booking monitoring, and read-only Stripe transaction details.
-
-## Installation
-
-Prerequisites: Node.js 24 LTS (compatible with Next.js 16), pnpm 12.4.2, and a running WedPlan backend.
+### Install and run
 
 ```bash
 git clone https://github.com/afiaafia/wedplan-client.git
@@ -38,67 +175,99 @@ pnpm install
 cp .env.example .env.local
 ```
 
-Fill in `.env.local` for local development, then start the app:
+Set the local environment values, then start the client:
 
 ```bash
 pnpm dev
 ```
 
-Open http://localhost:3000.
+Open `http://localhost:3000`.
 
-## Commands
-
-Use pnpm only; other package managers are not used by this project.
-
-| Command | Purpose |
-| --- | --- |
-| `pnpm dev` | Start the development server |
-| `pnpm build` | Create the production build |
-| `pnpm start` | Serve the production build |
-| `pnpm typecheck` | Run TypeScript without emitting files |
-| `pnpm lint` | Run ESLint |
-| `pnpm test` | Run the frontend Node test suite |
+---
 
 ## Environment variables
 
-| Variable | Scope | Purpose |
+Create `.env.local` from `.env.example`.
+
+| Variable | Required | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | Browser | API origin (same frontend origin in production; backend origin locally) |
-| `NEXT_PUBLIC_BETTER_AUTH_URL` | Browser | Better Auth origin (same frontend origin in production; backend origin locally) |
-| `NEXT_PUBLIC_SITE_URL` | Browser | Frontend origin used in user-facing links |
-| `API_INTERNAL_URL` | Server only | Backend origin used by Next.js API rewrites and server components |
-| `NEXT_PUBLIC_CONTACT_EMAIL` | Browser | Optional footer contact email |
-| `NEXT_PUBLIC_INSTAGRAM_URL` | Browser | Optional validated HTTPS/HTTP Instagram profile URL |
-| `NEXT_PUBLIC_FACEBOOK_URL` | Browser | Optional validated HTTPS/HTTP Facebook profile URL |
-| `NEXT_PUBLIC_PINTEREST_URL` | Browser | Optional validated HTTPS/HTTP Pinterest profile URL |
-| `NEXT_PUBLIC_X_URL` | Browser | Optional validated HTTPS/HTTP X profile URL |
+| `NEXT_PUBLIC_API_URL` | Yes locally | Public API origin; `http://localhost:5000` locally |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Yes locally | Better Auth origin; `http://localhost:5000` locally |
+| `NEXT_PUBLIC_SITE_URL` | Recommended | Frontend origin used in OAuth and redirects |
+| `API_INTERNAL_URL` | Yes locally | Server-only API origin used by Next.js rewrites and server components |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Optional | Footer contact email |
+| `NEXT_PUBLIC_INSTAGRAM_URL` | Optional | Validated HTTP(S) Instagram profile URL |
+| `NEXT_PUBLIC_FACEBOOK_URL` | Optional | Validated HTTP(S) Facebook profile URL |
+| `NEXT_PUBLIC_PINTEREST_URL` | Optional | Validated HTTP(S) Pinterest profile URL |
+| `NEXT_PUBLIC_X_URL` | Optional | Validated HTTP(S) X profile URL |
 
-`NEXT_PUBLIC_*` values are embedded in the browser bundle. Never place secrets in them. Secrets such as the Better Auth secret, MongoDB URI, ImgBB key, and Stripe secret key belong only on the backend. See `.env.example` for local defaults.
+`NEXT_PUBLIC_*` values are browser-visible. Never put secrets in them.
 
-## JWT bearer authentication
+In production, keep browser-facing auth/API values on the frontend origin and set `API_INTERNAL_URL` to the Render API origin:
 
-The browser continues to use secure Better Auth cookies for Google/email login. For protected API calls, the client can request a short-lived bearer token with `POST /api/me/token` and store it only in memory. The token complement is 15 minutes, is cleared on sign-out, and the backend revalidates the user role and blocked state on every bearer request.
+```dotenv
+NEXT_PUBLIC_API_URL=https://wedplan-client-ten.vercel.app
+NEXT_PUBLIC_BETTER_AUTH_URL=https://wedplan-client-ten.vercel.app
+NEXT_PUBLIC_SITE_URL=https://wedplan-client-ten.vercel.app
+API_INTERNAL_URL=https://wedplan-server-vcdp.onrender.com
+```
+
+---
 
 ## Project structure
 
 ```text
-src/app/                    App Router pages (public, auth, and role dashboards)
-src/components/home/        Homepage sections
-src/components/services/    Browse/details/booking UI
-src/components/dashboard/   Customer, vendor, and admin dashboard UI
-src/components/layout/      Navbar, footer, theme toggle, toasts
-src/lib/                    API clients, auth helpers, filters, role utilities
-src/proxy.ts                Route/session/role guard (Next.js proxy)
-tests/                      Frontend API/helper tests
-public/                     Static assets
+src/
+├── app/                         # Public, auth, and role-protected routes
+├── components/
+│   ├── auth/                    # Sign-in and sign-up experiences
+│   ├── dashboard/               # Customer, vendor, and admin dashboards
+│   ├── home/                    # Homepage sections
+│   ├── layout/                  # Navbar, footer, theme, and toast UI
+│   └── services/                # Discovery, details, and booking UI
+├── lib/                         # API clients and auth/filter utilities
+└── proxy.ts                     # Dashboard route and role guard
+tests/                           # Frontend API and helper tests
+docs/                            # QA screenshots and README assets
+public/                          # Static public assets
 ```
+
+---
+
+## Quality and testing
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+```
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm typecheck` | Run TypeScript without emitting files |
+| `pnpm lint` | Run ESLint |
+| `pnpm test` | Run the configured Node.js test suite |
+| `pnpm build` | Create the production Next.js build |
+
+The frontend test suite is a source-level and API-contract suite. It does not by itself prove real authenticated browser journeys or live Stripe payments.
 
 ## Deployment
 
-Deployed on Vercel as an existing Next.js project. No `vercel.json` is required: the platform detects Next.js, uses `pnpm build`, and serves the App Router output. Dynamic dashboard and service-detail routes are server-rendered; nested route refreshes work with the default Vercel Next.js handling.
+The client is deployed on Vercel at [wedplan-client-ten.vercel.app](https://wedplan-client-ten.vercel.app).
 
-In production, set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_BETTER_AUTH_URL` to the frontend origin (`https://wedplan-client-ten.vercel.app`) and set `API_INTERNAL_URL` to the backend origin (`https://wedplan-server-vcdp.onrender.com`). Next.js rewrites `/api/*` to the backend, so browser auth, OAuth callbacks, and API calls stay on the frontend origin. This makes Better Auth state/session cookies first-party while the server-side rewrite forwards them to Render. Keep local `.env.local` URLs pointed at `http://localhost:5000`; `API_INTERNAL_URL` is also `http://localhost:5000` locally.
+The Next.js application proxies `/api/*` requests to the configured API backend. This allows browser sessions and OAuth callbacks to remain on the Vercel origin while forwarding requests to Render.
 
-Set `NEXT_PUBLIC_SITE_URL` to the frontend origin. The backend `BETTER_AUTH_URL` must also use the frontend origin so Google returns to `https://wedplan-client-ten.vercel.app/api/auth/callback/google`, which is forwarded through the rewrite. Register that exact URL as an authorized redirect URI in Google Cloud Console. Image optimization is configured for `images.unsplash.com` in `next.config.ts`; other provider images use direct `<img>` URLs from the database.
+The backend Google authorized redirect URI must match the deployed callback:
 
-The backend must allow the Vercel origin in CORS and Better Auth trusted origins. Browser cookies are first-party through the same-origin rewrite, so they do not depend on third-party cookie support. Google OAuth uses one pending flow per browser profile because Better Auth validates a shared state cookie; another tab is blocked until the flow completes or its 10-minute lock expires. See the backend README for the exact backend variables.
+```text
+https://wedplan-client-ten.vercel.app/api/auth/callback/google
+```
+
+---
+
+## Related resources
+
+- [WedPlan Server](https://github.com/afiaafia/wedplan-server)
+- [Production API](https://wedplan-server-vcdp.onrender.com)
+- [API health endpoint](https://wedplan-server-vcdp.onrender.com/api/health)

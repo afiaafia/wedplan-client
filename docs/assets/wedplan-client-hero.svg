@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title description">
+  <title id="title">WedPlan wedding planning platform</title>
+  <desc id="description">Premium wedding planning experience for customers, vendors, and administrators</desc>
+  <rect width="1200" height="320" rx="24" fill="#fffcf8"/>
+  <circle cx="1048" cy="-10" r="210" fill="#f1dfdc" opacity=".62"/>
+  <circle cx="1120" cy="250" r="170" fill="#e7d7c2" opacity=".42"/>
+  <path d="M80 244C215 192 318 250 443 205C571 159 682 207 815 142C919 91 1034 112 1120 68" fill="none" stroke="#75434b" stroke-width="3" opacity=".16"/>
+  <rect x="72" y="64" width="58" height="58" rx="16" fill="#75434b"/>
+  <path d="M101 79c-14 0-20 17-10 27l10 10 10-10c10-10 4-27-10-27z" fill="none" stroke="#fff" stroke-width="3"/>
+  <text x="150" y="105" fill="#30272a" font-family="Georgia, serif" font-size="48" font-weight="700">WedPlan</text>
+  <text x="72" y="168" fill="#75434b" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="4">PLAN BEAUTIFULLY</text>
+  <text x="72" y="211" fill="#30272a" font-family="Georgia, serif" font-size="36">Discover. Connect. Celebrate.</text>
+  <g transform="translate(790 128)">
+    <rect width="310" height="112" rx="20" fill="#fff" stroke="#e9e1dc"/>
+    <circle cx="48" cy="56" r="26" fill="#f4edea"/>
+    <circle cx="48" cy="56" r="9" fill="#75434b"/>
+    <text x="86" y="48" fill="#30272a" font-family="Arial, sans-serif" font-size="18" font-weight="700">One thoughtful platform</text>
+    <text x="86" y="74" fill="#756b67" font-family="Arial, sans-serif" font-size="14">Customer · Vendor · Admin</text>
+  </g>
+</svg>

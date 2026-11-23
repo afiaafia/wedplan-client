@@ -65,13 +65,30 @@ export default function AdminShell({
     queueMicrotask(() => setOpen(false));
   }, [pathname]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   function isActive(href: string): boolean {
     if (href === "/dashboard/admin") return pathname === href;
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-x-clip">
       <div className="pointer-events-none absolute left-[-220px] top-32 h-96 w-96 rounded-full bg-accent/10 blur-[130px]" />
       <div className="pointer-events-none absolute bottom-0 right-[-140px] h-96 w-96 rounded-full bg-champagne/15 blur-[120px]" />
 
@@ -80,7 +97,8 @@ export default function AdminShell({
         onClick={() => setOpen(true)}
         aria-label="Open admin dashboard navigation"
         aria-expanded={open}
-        className="fixed left-4 top-[104px] z-40 flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-primary shadow-md backdrop-blur-xl lg:hidden"
+        aria-controls="admin-navigation-drawer"
+        className="fixed left-4 top-[104px] z-40 flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-primary shadow-md backdrop-blur-xl xl:hidden"
       >
         <Menu size={20} />
       </button>
@@ -90,12 +108,16 @@ export default function AdminShell({
           type="button"
           aria-label="Close admin dashboard navigation"
           onClick={() => setOpen(false)}
-          className="fixed inset-x-0 bottom-0 top-[88px] z-30 bg-foreground/25 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-x-0 bottom-0 top-[88px] z-30 bg-foreground/25 backdrop-blur-[2px] xl:hidden"
         />
       )}
 
       <aside
-        className={`fixed bottom-4 left-4 top-[104px] z-40 flex w-[280px] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(48,39,42,0.12)] backdrop-blur-2xl transition-transform duration-300 lg:translate-x-0 ${
+        id="admin-navigation-drawer"
+        role={open ? "dialog" : undefined}
+        aria-modal={open ? true : undefined}
+        aria-label="Admin dashboard navigation"
+        className={`fixed bottom-4 left-4 top-[104px] z-40 flex w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(48,39,42,0.12)] backdrop-blur-2xl transition-transform duration-300 xl:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-[120%]"
         }`}
       >
@@ -127,13 +149,16 @@ export default function AdminShell({
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Close admin dashboard navigation"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-secondary hover:text-primary lg:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-secondary hover:text-primary xl:hidden"
           >
             <X size={18} />
           </button>
         </div>
 
-        <nav aria-label="Admin dashboard navigation" className="mt-5 flex-1">
+        <nav
+          aria-label="Admin dashboard navigation"
+          className="mt-5 min-h-0 flex-1 overflow-y-auto"
+        >
           <p className="px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted/80">
             Administration
           </p>
@@ -161,7 +186,7 @@ export default function AdminShell({
           </div>
         </nav>
 
-        <div className="rounded-xl border border-border/70 bg-secondary/60 p-3.5">
+        <div className="shrink-0 rounded-xl border border-border/70 bg-secondary/60 p-3.5">
           <p className="text-xs font-semibold text-foreground">Platform oversight</p>
           <p className="mt-1 text-[11px] leading-5 text-muted">
             Review accounts, listings, bookings, and verified payment records.
@@ -171,15 +196,15 @@ export default function AdminShell({
           type="button"
           onClick={() => void logout()}
           disabled={isSigningOut}
-          className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-error transition-colors hover:bg-error/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-2 flex min-h-11 w-full shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-error transition-colors hover:bg-error/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-60"
         >
           <LogOut size={17} aria-hidden="true" />
           {isSigningOut ? "Signing out..." : "Logout"}
         </button>
       </aside>
 
-      <main className="relative z-10 px-4 pb-16 pt-[168px] sm:px-6 lg:pl-[320px] lg:pr-8 lg:pt-32">
-        <div className="mx-auto max-w-[1400px]">{children}</div>
+      <main className="relative z-10 min-w-0 px-4 pb-16 pt-[168px] sm:px-6 xl:pl-[320px] xl:pr-8 xl:pt-32">
+        <div className="mx-auto min-w-0 max-w-[1400px]">{children}</div>
       </main>
     </div>
   );

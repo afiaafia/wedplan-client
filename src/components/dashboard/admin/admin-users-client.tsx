@@ -140,20 +140,20 @@ export default function AdminUsersClient() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/70 bg-card/80 p-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/80 p-4 sm:flex-row sm:flex-wrap sm:items-center">
         <input
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search by name or email"
           aria-label="Search users"
-          className="min-w-[220px] flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-[220px] sm:flex-1"
         />
         <select
           value={role}
           onChange={(event) => setRole(event.target.value)}
           aria-label="Filter by role"
-          className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary sm:w-auto"
         >
           <option value="">All roles</option>
           <option value="customer">Customers</option>
@@ -164,7 +164,7 @@ export default function AdminUsersClient() {
           value={blocked}
           onChange={(event) => setBlocked(event.target.value)}
           aria-label="Filter by account status"
-          className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary sm:w-auto"
         >
           <option value="">All accounts</option>
           <option value="true">Blocked</option>
@@ -174,7 +174,7 @@ export default function AdminUsersClient() {
           type="button"
           onClick={() => setNonce((value) => value + 1)}
           aria-label="Refresh users"
-          className="rounded-xl border border-border p-2.5 text-muted transition hover:text-primary"
+          className="flex h-11 w-11 shrink-0 items-center justify-center self-end rounded-xl border border-border text-muted transition hover:text-primary sm:self-auto"
         >
           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
         </button>
@@ -189,7 +189,7 @@ export default function AdminUsersClient() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/80">
+      <div className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card/80">
         {loading && users.length === 0 ? (
           <div className="flex items-center justify-center gap-2 px-4 py-16 text-sm text-muted">
             <Loader2 size={16} className="animate-spin" /> Loading users...
@@ -199,7 +199,8 @@ export default function AdminUsersClient() {
             No users match these filters.
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="hidden overflow-x-auto lg:block">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted">
@@ -289,12 +290,83 @@ export default function AdminUsersClient() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+            <div className="space-y-3 p-3 lg:hidden">
+              {users.map((user) => (
+                <article
+                  key={user.id}
+                  className="rounded-xl border border-border/70 bg-background/60 p-4"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[11px] font-semibold text-primary">
+                      {user.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={user.image} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        getInitials(user.name)
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="break-words font-semibold text-foreground">{user.name}</h2>
+                      <p className="break-all text-xs text-muted">{user.email}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        user.isBlocked ? "bg-error/15 text-error" : "bg-success/15 text-success"
+                      }`}
+                    >
+                      {user.isBlocked ? "Blocked" : "Active"}
+                    </span>
+                  </div>
+                  <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
+                    <div className="min-w-0">
+                      <dt className="text-muted">Role</dt>
+                      <dd className="mt-1 break-words font-medium capitalize text-foreground">{user.roles.join(", ")}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted">Plan</dt>
+                      <dd className="mt-1 break-words font-medium capitalize text-foreground">{user.subscriptionPlan}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted">Joined</dt>
+                      <dd className="mt-1 break-words font-medium text-foreground">{formatEventDate(user.createdAt)}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted">Business</dt>
+                      <dd className="mt-1 break-words font-medium text-foreground">{user.businessName || "—"}</dd>
+                    </div>
+                  </dl>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void openDetail(user.id)}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-muted transition hover:text-primary"
+                    >
+                      <Eye size={15} /> Details
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyId === user.id}
+                      onClick={() => void toggleBlock(user)}
+                      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:opacity-60 ${
+                        user.isBlocked
+                          ? "border-success/30 text-success hover:bg-success/10"
+                          : "border-error/30 text-error hover:bg-error/10"
+                      }`}
+                    >
+                      {user.isBlocked ? <Unlock size={15} /> : <Lock size={15} />}
+                      {user.isBlocked ? "Unblock" : "Block"}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between text-xs text-muted">
+        <div className="flex flex-col gap-3 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>
             Page {meta.page} of {meta.totalPages} · {meta.total} users
           </span>
@@ -303,7 +375,7 @@ export default function AdminUsersClient() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((value) => Math.max(1, value - 1))}
-              className="rounded-lg border border-border px-3 py-1.5 font-semibold disabled:opacity-50"
+              className="min-h-11 min-w-11 rounded-lg border border-border px-3 py-2 font-semibold disabled:opacity-50"
             >
               Previous
             </button>
@@ -311,7 +383,7 @@ export default function AdminUsersClient() {
               type="button"
               disabled={page >= meta.totalPages}
               onClick={() => setPage((value) => value + 1)}
-              className="rounded-lg border border-border px-3 py-1.5 font-semibold disabled:opacity-50"
+              className="min-h-11 min-w-11 rounded-lg border border-border px-3 py-2 font-semibold disabled:opacity-50"
             >
               Next
             </button>
@@ -320,7 +392,7 @@ export default function AdminUsersClient() {
       )}
 
       {detailLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/25 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/25 p-3 backdrop-blur-sm sm:p-4">
           <div className="rounded-2xl bg-card p-8 shadow-xl">
             <Loader2 size={20} className="mx-auto animate-spin text-primary" />
           </div>
@@ -328,15 +400,15 @@ export default function AdminUsersClient() {
       )}
 
       {detail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/25 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/25 p-3 backdrop-blur-sm sm:p-4">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-user-detail-title"
-            className="w-full max-w-md rounded-2xl border border-border/70 bg-card p-6 shadow-xl"
+            className="max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-border/70 bg-card p-5 shadow-xl sm:max-h-[90vh] sm:p-6"
           >
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-primary">
                   {detail.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -349,21 +421,21 @@ export default function AdminUsersClient() {
                     getInitials(detail.name)
                   )}
                 </span>
-                <div>
+                <div className="min-w-0">
                   <h2
                     id="admin-user-detail-title"
-                    className="font-serif text-xl text-foreground"
+                    className="break-words font-serif text-xl text-foreground"
                   >
                     {detail.name}
                   </h2>
-                  <p className="text-xs text-muted">{detail.email}</p>
+                  <p className="break-all text-xs text-muted">{detail.email}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setDetail(null)}
                 aria-label="Close user details"
-                className="rounded-lg p-1.5 text-muted hover:bg-secondary"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-secondary"
               >
                 <X size={18} />
               </button>
@@ -384,11 +456,11 @@ export default function AdminUsersClient() {
                 value={detail.businessName || "Not provided"}
               />
             </dl>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => setDetail(null)}
-                className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted transition hover:text-primary"
+                className="min-h-11 rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted transition hover:text-primary"
               >
                 Close
               </button>
@@ -396,7 +468,7 @@ export default function AdminUsersClient() {
                 type="button"
                 disabled={busyId === detail.id}
                 onClick={() => void toggleBlock(detail)}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-60 ${
+                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-60 ${
                   detail.isBlocked
                     ? "bg-success hover:bg-success/90"
                     : "bg-error hover:bg-error/90"
@@ -417,7 +489,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-2 last:border-0">
       <dt className="text-muted">{label}</dt>
-      <dd className="font-medium capitalize text-foreground">{value}</dd>
+      <dd className="min-w-0 break-words text-right font-medium capitalize text-foreground">{value}</dd>
     </div>
   );
 }

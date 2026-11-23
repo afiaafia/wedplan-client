@@ -68,12 +68,12 @@ export default function AdminOverviewClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-serif text-xl text-foreground">Platform at a glance</h2>
         <button
           type="button"
           onClick={() => setNonce((value) => value + 1)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-semibold text-muted transition hover:text-primary"
+          className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-semibold text-muted transition hover:text-primary"
         >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
         </button>
@@ -98,7 +98,7 @@ export default function AdminOverviewClient() {
       )}
 
       {loading && !data ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 min-[375px]:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
           {STAT_LABELS.map((item) => (
             <div
               key={item.key}
@@ -108,13 +108,13 @@ export default function AdminOverviewClient() {
         </div>
       ) : data ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 min-[375px]:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
             {STAT_LABELS.map((item) => (
               <div
                 key={item.key}
                 className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-sm"
               >
-                <p className="text-xs font-medium uppercase tracking-wide text-muted">
+                <p className="break-words text-xs font-medium uppercase tracking-wide text-muted">
                   {item.label}
                 </p>
                 <p className="mt-3 font-serif text-3xl text-foreground">
@@ -138,7 +138,7 @@ export default function AdminOverviewClient() {
                     <p className="text-xs font-medium uppercase tracking-wide text-muted">
                       {total.currency.toUpperCase()}
                     </p>
-                    <p className="mt-2 font-serif text-2xl text-foreground">
+                    <p className="mt-2 break-all font-serif text-xl text-foreground sm:text-2xl">
                       {formatCurrencyAmount(total.amount, total.currency)}
                     </p>
                   </div>
@@ -153,11 +153,11 @@ export default function AdminOverviewClient() {
 
           <div className="grid gap-5 xl:grid-cols-2">
             <section className="rounded-2xl border border-border/70 bg-card/80 p-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-serif text-lg text-foreground">Recent users</h3>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="min-w-0 font-serif text-lg text-foreground">Recent users</h3>
                 <Link
                   href="/dashboard/admin/users"
-                  className="text-xs font-semibold text-primary hover:underline"
+                  className="shrink-0 text-xs font-semibold text-primary hover:underline"
                 >
                   Manage users
                 </Link>
@@ -175,13 +175,13 @@ export default function AdminOverviewClient() {
             </section>
 
             <section className="rounded-2xl border border-border/70 bg-card/80 p-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-serif text-lg text-foreground">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="min-w-0 font-serif text-lg text-foreground">
                   Recently submitted services
                 </h3>
                 <Link
                   href="/dashboard/admin/services"
-                  className="text-xs font-semibold text-primary hover:underline"
+                  className="shrink-0 text-xs font-semibold text-primary hover:underline"
                 >
                   Review services
                 </Link>
@@ -199,11 +199,11 @@ export default function AdminOverviewClient() {
             </section>
 
             <section className="rounded-2xl border border-border/70 bg-card/80 p-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-serif text-lg text-foreground">Recent bookings</h3>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="min-w-0 font-serif text-lg text-foreground">Recent bookings</h3>
                 <Link
                   href="/dashboard/admin/bookings"
-                  className="text-xs font-semibold text-primary hover:underline"
+                  className="shrink-0 text-xs font-semibold text-primary hover:underline"
                 >
                   View bookings
                 </Link>
@@ -220,13 +220,13 @@ export default function AdminOverviewClient() {
             </section>
 
             <section className="rounded-2xl border border-border/70 bg-card/80 p-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-serif text-lg text-foreground">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="min-w-0 font-serif text-lg text-foreground">
                   Recent transactions
                 </h3>
                 <Link
                   href="/dashboard/admin/transactions"
-                  className="text-xs font-semibold text-primary hover:underline"
+                  className="shrink-0 text-xs font-semibold text-primary hover:underline"
                 >
                   View transactions
                 </Link>
@@ -278,7 +278,7 @@ function RecentList({
       {items.map((item) => (
         <li
           key={item.id}
-          className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/50 p-3"
+          className="flex min-w-0 items-start gap-3 rounded-xl border border-border/60 bg-background/50 p-3 sm:items-center"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[11px] font-semibold text-primary">
             {item.image ? (
@@ -289,12 +289,16 @@ function RecentList({
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">
+            <p className="break-words text-sm font-medium text-foreground">
               {item.primary}
             </p>
-            <p className="truncate text-xs text-muted">{item.secondary}</p>
+            <p className="mt-0.5 break-words text-xs leading-5 text-muted">
+              {item.secondary}
+            </p>
           </div>
-          <span className="shrink-0 text-[11px] text-muted">{item.meta}</span>
+          <span className="max-w-20 shrink-0 break-words text-right text-[11px] text-muted sm:max-w-none">
+            {item.meta}
+          </span>
         </li>
       ))}
     </ul>
