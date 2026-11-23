@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth-server";
-import { getRoleDashboard } from "@/lib/roles";
+import { normalizeRoles } from "@/lib/roles";
+import DashboardEntry from "@/components/dashboard/dashboard-entry";
 
 export const instant = false;
 
@@ -12,5 +12,10 @@ export const metadata: Metadata = {
 
 export default async function DashboardPage() {
   const session = await requireSession("/dashboard");
-  redirect(getRoleDashboard(session.user.role, session.user.roles));
+  return (
+    <DashboardEntry
+      sessionId={session.session.id}
+      roles={normalizeRoles(session.user.roles, session.user.role)}
+    />
+  );
 }

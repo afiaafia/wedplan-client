@@ -99,6 +99,8 @@ test("Admin post-auth redirects cannot fall through to Customer or Vendor dashbo
     isAllowedPostAuthRedirectForRoles("/dashboard/vendor/bookings", roles),
     false
   );
+  assert.equal(isRouteAllowedForRoles("/dashboard/customer", roles), false);
+  assert.equal(isRouteAllowedForRoles("/dashboard/admin", roles), true);
 });
 
 test("unrelated or unsafe paths are not treated as service destinations", () => {

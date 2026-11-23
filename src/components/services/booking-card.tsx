@@ -13,7 +13,12 @@ import {
   MapPin,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
-import { getPrimaryRole, getRoleDashboard, hasRole } from "@/lib/roles";
+import {
+  getRoleDashboard,
+  hasRole,
+  normalizeRoles,
+} from "@/lib/roles";
+import { useActiveDashboardRole } from "@/lib/use-active-dashboard-role";
 import { formatPrice, type ServiceDetail } from "@/lib/services-api";
 import type { BookingConfirmation as BookingConfirmationData } from "@/lib/bookings-api";
 import BookingConfirmation from "./booking-confirmation";
@@ -29,10 +34,15 @@ export default function BookingCard({ service }: { service: ServiceDetail }) {
     useState<BookingConfirmationData | null>(null);
 
   const user = session?.user;
+  const roles = user ? normalizeRoles(user.roles, user.role) : [];
+  const role = useActiveDashboardRole(
+    session?.session?.id ?? null,
+    roles.join("|"),
+    "/services"
+  );
   const canBookAsCustomer = user
     ? hasRole(user.roles, "customer", user.role)
     : false;
-  const role = user ? getPrimaryRole(user.role, user.roles) : null;
   const isBlocked = user?.isBlocked === true;
   const canBook = canBookAsCustomer && !isBlocked;
 
@@ -119,7 +129,7 @@ export default function BookingCard({ service }: { service: ServiceDetail }) {
               : "Vendors and admins can't submit customer booking requests."}
           </p>
           <Link
-            href={getRoleDashboard(role)}
+            href={role ? getRoleDashboard(role) : "/dashboard"}
             className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Go to your dashboard

@@ -3,7 +3,7 @@ export default function ServiceDetailsSkeleton() {
     <div aria-busy="true" className="animate-pulse">
       <span className="sr-only">Loading service details</span>
       <div className="h-5 w-32 rounded bg-secondary" />
-      <div className="mt-6 h-72 rounded-[28px] bg-secondary sm:h-[460px]" />
+      <div className="mt-6 h-72 rounded-[28px] bg-secondary sm:h-115" />
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-4 rounded-[28px] border border-border/80 bg-card/60 p-8">
           <div className="h-6 w-28 rounded bg-secondary" />

@@ -24,6 +24,7 @@ import {
 } from "@/lib/route-access";
 import { getRoleDashboard, normalizeRoles } from "@/lib/roles";
 import { getVendorSignInDisposition } from "@/lib/vendor-auth";
+import { setSessionActiveRole } from "@/lib/active-role";
 import {
   finishGoogleOAuthFlow,
   startGoogleOAuthFlow,
@@ -151,6 +152,11 @@ export default function VendorSignInForm() {
       requestedPath && isAllowedPostAuthRedirect(requestedPath, "vendor")
         ? requestedPath
         : getRoleDashboard("vendor");
+
+    const sessionId = sessionResult.data?.session?.id;
+    if (sessionId) {
+      setSessionActiveRole(sessionId, "vendor", userRoles);
+    }
 
     showToast({
       title: "Signed in",
@@ -314,7 +320,7 @@ export default function VendorSignInForm() {
       />
 
       {/* Centered elevated vendor authentication card */}
-      <div className="relative z-10 w-full max-w-[460px] rounded-[32px] border border-border/80 bg-card p-7 shadow-[0_20px_70px_rgba(48,39,42,0.08)] sm:p-10">
+      <div className="relative z-10 w-full max-w-115 rounded-4xl border border-border/80 bg-card p-7 shadow-[0_20px_70px_rgba(48,39,42,0.08)] sm:p-10">
         {/* Brand heart icon */}
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
           <Heart size={26} strokeWidth={1.8} className="fill-white/10" aria-hidden="true" />

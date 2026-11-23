@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, CalendarDays, MapPin, UserRound } from "lucide-react";
 import DashboardSection from "@/components/dashboard/vendor/dashboard-section";
 import BookingStatusBadge from "./booking-status-badge";
@@ -67,9 +68,12 @@ export default function CustomerRecentBookings({
               <div className="flex min-w-0 items-center gap-4">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-primary">
                   {booking.service?.image ? (
-                    <img
+                    <Image
                       src={booking.service.image}
                       alt=""
+                      width={56}
+                      height={56}
+                      unoptimized
                       className="h-full w-full object-cover"
                     />
                   ) : (

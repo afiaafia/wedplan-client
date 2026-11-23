@@ -29,7 +29,7 @@ export default function ServiceImageGallery({
       <div
         role="img"
         aria-label="No image available"
-        className="flex h-72 items-center justify-center rounded-[28px] border border-border/80 bg-secondary text-muted/60 sm:h-[460px]"
+        className="flex h-72 items-center justify-center rounded-[28px] border border-border/80 bg-secondary text-muted/60 sm:h-115"
       >
         <div className="text-center">
           <ImageOff size={40} strokeWidth={1.3} className="mx-auto" />
@@ -41,7 +41,7 @@ export default function ServiceImageGallery({
 
   return (
     <div className="overflow-hidden rounded-[28px] border border-border/80 bg-secondary shadow-sm">
-      <div className="relative h-72 bg-secondary sm:h-[460px]">
+      <div className="relative h-72 bg-secondary sm:h-115">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={primary.src}

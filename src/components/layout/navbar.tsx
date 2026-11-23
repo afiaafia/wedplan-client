@@ -15,10 +15,10 @@ import ThemeToggle from "./theme-toggle";
 import { useSession } from "@/lib/auth-client";
 import { useLogout } from "@/lib/use-logout";
 import {
-  getPrimaryRole,
   getRoleDashboard,
   normalizeRoles,
 } from "@/lib/roles";
+import { useActiveDashboardRole } from "@/lib/use-active-dashboard-role";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -47,6 +47,11 @@ export default function Navbar() {
 
   const user = session?.user;
   const roles = normalizeRoles(user?.roles, user?.role);
+  const activeRole = useActiveDashboardRole(
+    session?.session?.id ?? null,
+    roles.join("|"),
+    pathname
+  );
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -105,14 +110,9 @@ export default function Navbar() {
   }, [profileOpen]);
 
   const isAuthenticated = !!user;
-  const activeRole = roles.includes("admin")
-    ? "admin"
-    : roles.find(
-        (role) =>
-          pathname === getRoleDashboard(role) ||
-          pathname.startsWith(`${getRoleDashboard(role)}/`)
-      ) ?? getPrimaryRole(user?.role, roles);
-  const dashboardHref = getRoleDashboard(activeRole);
+  const dashboardHref = activeRole
+    ? getRoleDashboard(activeRole)
+    : "/dashboard";
 
   const initials =
     user?.name
@@ -125,7 +125,7 @@ export default function Navbar() {
   if (pathname === "/vendor/sign-in") {
     return (
       <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/70 bg-card/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-[72px] max-w-[1380px] items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-18 max-w-345 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* WedPlan logo on the left */}
           <Link
             href="/"
@@ -173,12 +173,12 @@ export default function Navbar() {
                 <motion.span
                   animate={mobileOpen ? { top: "9px", rotate: 45, width: "22px" } : { top: "5px", rotate: 0, width: "22px" }}
                   transition={{ duration: 0.3 }}
-                  className="absolute right-0 h-[2px] rounded-full bg-primary"
+                  className="absolute right-0 h-0.5 rounded-full bg-primary"
                 />
                 <motion.span
                   animate={mobileOpen ? { top: "9px", rotate: -45, width: "22px" } : { top: "15px", rotate: 0, width: "14px" }}
                   transition={{ duration: 0.3 }}
-                  className="absolute right-0 h-[2px] rounded-full bg-primary"
+                  className="absolute right-0 h-0.5 rounded-full bg-primary"
                 />
               </span>
             </button>
@@ -235,7 +235,7 @@ export default function Navbar() {
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 px-4 pt-4 sm:px-6">
-      <nav className="mx-auto flex h-[72px] max-w-[1380px] items-center justify-between rounded-2xl border border-white/80 bg-white/65 px-5 shadow-[0_8px_40px_rgba(48,39,42,0.07)] backdrop-blur-2xl backdrop-saturate-150 sm:px-8">
+      <nav className="mx-auto flex h-18 max-w-345 items-center justify-between rounded-2xl border border-white/80 bg-white/65 px-5 shadow-[0_8px_40px_rgba(48,39,42,0.07)] backdrop-blur-2xl backdrop-saturate-150 sm:px-8">
 
         {/* Logo */}
         <Link
@@ -302,7 +302,7 @@ export default function Navbar() {
                   </span>
                 )}
 
-                <span className="max-w-[110px] truncate text-sm font-semibold text-foreground">
+                <span className="max-w-27.5 truncate text-sm font-semibold text-foreground">
                   {user.name || "My Account"}
                 </span>
 
@@ -415,12 +415,12 @@ export default function Navbar() {
               <motion.span
                 animate={mobileOpen ? { top: "11px", rotate: 45, width: "26px" } : { top: "6px", rotate: 0, width: "26px" }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute right-0 h-[2px] rounded-full bg-primary"
+                className="absolute right-0 h-0.5 rounded-full bg-primary"
               />
               <motion.span
                 animate={mobileOpen ? { top: "11px", rotate: -45, width: "26px" } : { top: "18px", rotate: 0, width: "16px" }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute right-0 h-[2px] rounded-full bg-primary"
+                className="absolute right-0 h-0.5 rounded-full bg-primary"
               />
             </span>
           </button>
@@ -436,7 +436,7 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mx-auto mt-2 max-w-[1380px] rounded-2xl border border-white/80 bg-white/85 p-4 shadow-xl backdrop-blur-2xl md:hidden"
+            className="mx-auto mt-2 max-w-345 rounded-2xl border border-white/80 bg-white/85 p-4 shadow-xl backdrop-blur-2xl md:hidden"
           >
             <div className="space-y-1">
               {navLinks.map((link) => (

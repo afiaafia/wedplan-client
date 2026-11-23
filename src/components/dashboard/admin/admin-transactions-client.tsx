@@ -90,7 +90,7 @@ export default function AdminTransactionsClient() {
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search transactions"
           aria-label="Search transactions"
-          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-[220px] sm:flex-1"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-55 sm:flex-1"
         />
         <select
           value={status}
@@ -143,7 +143,7 @@ export default function AdminTransactionsClient() {
         ) : (
           <>
             <div className="hidden overflow-x-auto lg:block">
-            <table className="w-full min-w-[1180px] text-left text-sm">
+            <table className="w-full min-w-295 text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted">
                   <th className="px-4 py-3">Transaction</th>
@@ -243,28 +243,28 @@ export default function AdminTransactionsClient() {
                       {transaction.status}
                     </span>
                   </div>
-                  <p className="mt-3 break-words font-medium text-foreground">
+                  <p className="mt-3 wrap-break-word font-medium text-foreground">
                     {transaction.vendorName || "Vendor"}
                   </p>
                   <p className="break-all text-xs text-muted">{transaction.vendorEmail || ""}</p>
                   <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
                     <div className="min-w-0">
                       <dt className="text-muted">Plan</dt>
-                      <dd className="mt-1 break-words font-medium capitalize text-foreground">{transaction.plan}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium capitalize text-foreground">{transaction.plan}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted">Amount</dt>
-                      <dd className="mt-1 break-words font-semibold text-foreground">
+                      <dd className="mt-1 wrap-break-word font-semibold text-foreground">
                         {formatCurrencyAmount(transaction.amount, transaction.currency)}
                       </dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted">Provider</dt>
-                      <dd className="mt-1 break-words font-medium capitalize text-foreground">{transaction.provider}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium capitalize text-foreground">{transaction.provider}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted">Date</dt>
-                      <dd className="mt-1 break-words font-medium text-foreground">{formatEventDate(transaction.createdAt)}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium text-foreground">{formatEventDate(transaction.createdAt)}</dd>
                     </div>
                     <div className="col-span-2 min-w-0">
                       <dt className="text-muted">Reference</dt>
@@ -325,7 +325,7 @@ export default function AdminTransactionsClient() {
               <div className="min-w-0">
                 <h2
                   id="admin-transaction-detail-title"
-                  className="break-words font-serif text-2xl text-foreground"
+                  className="wrap-break-word font-serif text-2xl text-foreground"
                 >
                   Transaction details
                 </h2>

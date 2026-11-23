@@ -12,7 +12,7 @@ export default function VendorInformationPage() {
     <main className="min-h-[calc(100vh-72px)] bg-background px-5 pb-20 pt-32 sm:px-8">
       <section
         aria-labelledby="vendor-information-heading"
-        className="mx-auto max-w-3xl rounded-[32px] border border-border/80 bg-card px-7 py-10 shadow-[0_20px_70px_rgba(48,39,42,0.08)] sm:px-12 sm:py-14"
+        className="mx-auto max-w-3xl rounded-4xl border border-border/80 bg-card px-7 py-10 shadow-[0_20px_70px_rgba(48,39,42,0.08)] sm:px-12 sm:py-14"
       >
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-champagne">
           For wedding professionals

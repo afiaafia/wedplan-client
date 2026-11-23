@@ -147,7 +147,7 @@ export default function AdminUsersClient() {
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search by name or email"
           aria-label="Search users"
-          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-[220px] sm:flex-1"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-55 sm:flex-1"
         />
         <select
           value={role}
@@ -201,7 +201,7 @@ export default function AdminUsersClient() {
         ) : (
           <>
             <div className="hidden overflow-x-auto lg:block">
-            <table className="w-full min-w-[900px] text-left text-sm">
+            <table className="w-full min-w-225 text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted">
                   <th className="px-4 py-3">User</th>
@@ -307,7 +307,7 @@ export default function AdminUsersClient() {
                       )}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h2 className="break-words font-semibold text-foreground">{user.name}</h2>
+                      <h2 className="wrap-break-word font-semibold text-foreground">{user.name}</h2>
                       <p className="break-all text-xs text-muted">{user.email}</p>
                     </div>
                     <span
@@ -321,19 +321,19 @@ export default function AdminUsersClient() {
                   <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
                     <div className="min-w-0">
                       <dt className="text-muted">Role</dt>
-                      <dd className="mt-1 break-words font-medium capitalize text-foreground">{user.roles.join(", ")}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium capitalize text-foreground">{user.roles.join(", ")}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted">Plan</dt>
-                      <dd className="mt-1 break-words font-medium capitalize text-foreground">{user.subscriptionPlan}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium capitalize text-foreground">{user.subscriptionPlan}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted">Joined</dt>
-                      <dd className="mt-1 break-words font-medium text-foreground">{formatEventDate(user.createdAt)}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium text-foreground">{formatEventDate(user.createdAt)}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted">Business</dt>
-                      <dd className="mt-1 break-words font-medium text-foreground">{user.businessName || "—"}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium text-foreground">{user.businessName || "—"}</dd>
                     </div>
                   </dl>
                   <div className="mt-4 grid grid-cols-2 gap-2">
@@ -424,7 +424,7 @@ export default function AdminUsersClient() {
                 <div className="min-w-0">
                   <h2
                     id="admin-user-detail-title"
-                    className="break-words font-serif text-xl text-foreground"
+                    className="wrap-break-word font-serif text-xl text-foreground"
                   >
                     {detail.name}
                   </h2>
@@ -489,7 +489,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-2 last:border-0">
       <dt className="text-muted">{label}</dt>
-      <dd className="min-w-0 break-words text-right font-medium capitalize text-foreground">{value}</dd>
+      <dd className="min-w-0 wrap-break-word text-right font-medium capitalize text-foreground">{value}</dd>
     </div>
   );
 }

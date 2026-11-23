@@ -93,7 +93,7 @@ export default function VendorSidebar({
         onClick={() => setOpen(true)}
         aria-label="Open dashboard navigation"
         aria-expanded={open}
-        className="fixed left-4 top-[104px] z-40 flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-primary shadow-md backdrop-blur-xl lg:hidden"
+        className="fixed left-4 top-26 z-40 flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-primary shadow-md backdrop-blur-xl lg:hidden"
       >
         <Menu size={20} />
       </button>
@@ -103,12 +103,12 @@ export default function VendorSidebar({
           type="button"
           aria-label="Close dashboard navigation"
           onClick={() => setOpen(false)}
-          className="fixed inset-x-0 bottom-0 top-[88px] z-30 bg-foreground/25 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-x-0 bottom-0 top-22 z-30 bg-foreground/25 backdrop-blur-[2px] lg:hidden"
         />
       )}
 
       <aside
-        className={`fixed bottom-4 left-4 top-[104px] z-40 flex w-[280px] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(48,39,42,0.12)] backdrop-blur-2xl transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed bottom-4 left-4 top-26 z-40 flex w-70 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(48,39,42,0.12)] backdrop-blur-2xl transition-transform duration-300 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-[120%]"
         }`}
       >

@@ -7,6 +7,8 @@ import {
   Heart,
   LogIn,
   Mail,
+  MapPin,
+  Phone,
   Search,
   Shirt,
   Sparkles,
@@ -15,8 +17,48 @@ import {
   LayoutDashboard,
   House,
 } from "lucide-react";
+import type { IconType } from "react-icons";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaPinterestP,
+  FaXTwitter,
+  FaYoutube,
+} from "react-icons/fa6";
 
-import { getFooterContact } from "@/lib/footer-links";
+const socialLinks: Array<{ label: string; href: string; icon: IconType }> = [
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/",
+    icon: FaFacebookF,
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/",
+    icon: FaInstagram,
+  },
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/",
+    icon: FaYoutube,
+  },
+  {
+    label: "Pinterest",
+    href: "https://www.pinterest.com/",
+    icon: FaPinterestP,
+  },
+  {
+    label: "X (formerly Twitter)",
+    href: "https://x.com/",
+    icon: FaXTwitter,
+  },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/",
+    icon: FaLinkedinIn,
+  },
+];
 
 const navigationLinks = [
   { label: "Home", href: "/", icon: House },
@@ -34,68 +76,6 @@ const categoryLinks = [
   { label: "Makeup & Styling", icon: Sparkles },
   { label: "Wedding Fashion", icon: Shirt },
 ];
-
-function SocialOutlineIcon({ name }: { name: string }) {
-  const common = {
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.5,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
-
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      aria-hidden="true"
-      {...common}
-    >
-      {name === "instagram" && (
-        <>
-          <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
-          <circle cx="12" cy="12" r="4" />
-          <circle cx="17.5" cy="6.7" r="0.7" />
-        </>
-      )}
-
-      {name === "facebook" && (
-        <path d="M14.2 20v-7.3h2.5l.4-3h-2.9V7.8c0-.9.3-1.5 1.5-1.5h1.5V3.6c-.7-.1-1.4-.2-2.2-.2-2.3 0-3.9 1.4-3.9 4v2.3H8.5v3h2.6V20" />
-      )}
-
-      {name === "youtube" && (
-        <>
-          <rect x="2.8" y="5.5" width="18.4" height="13" rx="4" />
-          <path d="m10 9 5 3-5 3z" />
-        </>
-      )}
-
-      {name === "x" && (
-        <>
-          <path d="M4 3.5 20 20.5" />
-          <path d="M20 3.5 4 20.5" />
-          <path d="M4 3.5h4l12 17h-4z" />
-        </>
-      )}
-
-      {name === "pinterest" && (
-        <>
-          <circle cx="12" cy="12" r="9" />
-          <path d="M10 20.5 12.2 13c-.5-1-.6-2.2.1-3.2.8-1.2 2.5-1.5 3.5-.6 1.1 1 .8 2.8-.1 4-.8 1.1-2.2 1.5-3.3.9" />
-          <path d="M9.6 15.7c-.4-.9-.5-2-.2-3.1" />
-        </>
-      )}
-
-      {name === "tiktok" && (
-        <>
-          <path d="M14 3.5v11.2a3.5 3.5 0 1 1-3-3.5" />
-          <path d="M14 3.5c.4 2.5 2 4.1 4.5 4.5" />
-        </>
-      )}
-    </svg>
-  );
-}
 
 function FooterLink({
   href,
@@ -117,19 +97,17 @@ function FooterLink({
         className="h-3.5 w-3.5 shrink-0 text-primary/65 transition-colors duration-300 group-hover:text-primary sm:h-4 sm:w-4"
         aria-hidden="true"
       />
-      <span className="min-w-0 break-words">{label}</span>
+      <span className="min-w-0 wrap-break-word">{label}</span>
     </Link>
   );
 }
 
 export default function Footer() {
-  const { email, socials } = getFooterContact();
-
   return (
     <footer className="relative px-3 pb-4 pt-8 sm:px-6 sm:pb-6 sm:pt-12 lg:px-10">
-      <div className="mx-auto max-w-[1380px]">
+      <div className="mx-auto max-w-345">
         {/* Main glass capsule */}
-        <div className="footer-glass relative overflow-hidden rounded-[1.5rem] border border-white/80 bg-white/65 px-4 py-6 shadow-[0_18px_60px_rgba(74,43,48,0.07)] backdrop-blur-2xl sm:rounded-[2rem] sm:px-8 sm:py-11 lg:px-11">
+        <div className="footer-glass relative overflow-hidden rounded-3xl border border-white/80 bg-white/65 px-4 py-6 shadow-[0_18px_60px_rgba(74,43,48,0.07)] backdrop-blur-2xl sm:rounded-4xl sm:px-8 sm:py-11 lg:px-11">
           {/* Subtle decorative light */}
           <div
             aria-hidden="true"
@@ -150,7 +128,7 @@ export default function Footer() {
                   aria-label="WedPlan home"
                 >
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/15 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105 sm:h-12 sm:w-12 sm:rounded-2xl">
-                    <Heart size={20} strokeWidth={1.8} aria-hidden="true" className="sm:h-[23px] sm:w-[23px]" />
+                    <Heart size={20} strokeWidth={1.8} aria-hidden="true" className="sm:h-5.75 sm:w-5.75" />
                   </span>
 
                   <span className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
@@ -171,7 +149,7 @@ export default function Footer() {
               </div>
 
               {/* CTA */}
-              <div className="relative overflow-hidden rounded-[1.25rem] border border-[#e9e1dc]/80 bg-gradient-to-br from-[#f8f3ef]/95 via-[#f4edea]/90 to-[#eee3df]/90 p-4 shadow-inner sm:rounded-[1.5rem] sm:p-7">
+              <div className="relative overflow-hidden rounded-2xl border border-[#e9e1dc]/80 bg-linear-to-br from-[#f8f3ef]/95 via-[#f4edea]/90 to-[#eee3df]/90 p-4 shadow-inner sm:rounded-3xl sm:p-7">
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute -right-8 -top-12 h-36 w-36 rounded-full border border-white/70"
@@ -226,7 +204,7 @@ export default function Footer() {
             </div>
 
             {/* Footer columns */}
-            <div className="grid grid-cols-2 gap-x-3 gap-y-6 py-6 sm:gap-9 sm:py-9 lg:grid-cols-[1fr_1.2fr_1.5fr_1fr] lg:gap-8">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-6 py-6 sm:gap-9 sm:py-9 lg:grid-cols-3 lg:gap-8 xl:grid-cols-[0.85fr_1.15fr_1.15fr_1.25fr_1fr]">
               {/* Navigation */}
               <div>
                 <h3 className="font-serif text-base font-semibold text-foreground sm:text-lg">
@@ -265,72 +243,99 @@ export default function Footer() {
                         className="h-3.5 w-3.5 shrink-0 text-primary/65 transition-colors duration-300 group-hover:text-primary sm:h-4 sm:w-4"
                         aria-hidden="true"
                       />
-                      <span className="min-w-0 break-words">{label}</span>
+                      <span className="min-w-0 wrap-break-word">{label}</span>
                     </Link>
                   ))}
                 </div>
               </div>
 
-              {/* Contact and social */}
+              {/* Social links */}
               <div>
                 <h3 className="font-serif text-base font-semibold text-foreground sm:text-lg">
-                  Contact & Connect
+                  Connect With Us
                 </h3>
                 <p className="mt-1 text-xs text-muted">
-                  Stay connected with WedPlan
+                  Demo social links
                 </p>
 
-                <div className="mt-4">
-                  {email ? (
+                <div className="mt-4 grid max-w-[11rem] grid-cols-3 gap-2">
+                  {socialLinks.map(({ label, href, icon: Icon }) => (
                     <a
-                      href={email}
-                      className="group inline-flex max-w-full items-center gap-2 rounded-lg py-1 text-xs text-muted transition-colors duration-300 hover:text-primary sm:gap-2.5 sm:py-1.5 sm:text-sm"
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Visit WedPlan on ${label} (demo link)`}
+                      title={`${label} demo link`}
+                      className="social-glow group relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/80 bg-white/55 text-primary shadow-[0_5px_18px_rgba(74,43,48,0.06)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-white/90 hover:text-[#603541] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
-                      <Mail
-                        size={16}
-                        className="text-primary/70 transition-colors group-hover:text-primary"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0 break-all">{email.replace("mailto:", "")}</span>
+                      <Icon size={18} aria-hidden="true" />
                     </a>
-                  ) : (
-                    <p className="flex items-center gap-2.5 py-1.5 text-sm text-muted">
-                      <Mail
-                        size={16}
-                        className="text-primary/70"
-                        aria-hidden="true"
-                      />
-                      Get in touch with WedPlan
-                    </p>
-                  )}
+                  ))}
                 </div>
+              </div>
 
-                <div className="mt-6">
-                  <h4 className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
-                    Follow WedPlan
-                  </h4>
+              {/* Contact information */}
+              <div>
+                <h3 className="font-serif text-base font-semibold text-foreground sm:text-lg">
+                  Contact Information
+                </h3>
+                <p className="mt-1 text-xs text-muted">
+                  Fictional demo details
+                </p>
 
-                  {socials.length > 0 ? (
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      {socials.map(({ label, icon, href }) => (
-                        <a
-                          key={label}
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Visit ${label}`}
-                          title={label}
-                          className="social-glow group relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/80 bg-white/55 text-primary shadow-[0_5px_18px_rgba(74,43,48,0.06)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-white/90 hover:text-[#603541] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                        >
-                          <SocialOutlineIcon name={icon} />
-                        </a>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="mt-4 max-w-xs text-xs leading-5 text-muted">
-                      Social profile links are not configured yet.
-                    </p>
-                  )}
+                <div className="mt-4 flex min-w-0 flex-col gap-3">
+                  <a
+                    href="mailto:hello@example.com"
+                    aria-label="Email hello@example.com (demo)"
+                    className="group flex min-w-0 items-start gap-2.5 rounded-lg text-xs text-muted transition-colors duration-300 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    <Mail
+                      size={16}
+                      className="mt-0.5 shrink-0 text-primary/70 transition-colors group-hover:text-primary"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground">
+                        Email
+                      </span>
+                      <span className="break-all">hello@example.com</span>
+                    </span>
+                  </a>
+
+                  <a
+                    href="tel:+15550102020"
+                    aria-label="Call +1 (555) 010-2020 (demo)"
+                    className="group flex min-w-0 items-start gap-2.5 rounded-lg text-xs text-muted transition-colors duration-300 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    <Phone
+                      size={16}
+                      className="mt-0.5 shrink-0 text-primary/70 transition-colors group-hover:text-primary"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground">
+                        Phone
+                      </span>
+                      <span>+1 (555) 010-2020</span>
+                    </span>
+                  </a>
+
+                  <div className="flex min-w-0 items-start gap-2.5 text-xs text-muted">
+                    <MapPin
+                      size={16}
+                      className="mt-0.5 shrink-0 text-primary/70"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground">
+                        Location
+                      </span>
+                      <span className="wrap-break-word">
+                        123 Celebration Avenue, Demo City (Demo Address)
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </div>
 

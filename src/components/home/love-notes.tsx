@@ -53,7 +53,7 @@ export default function LoveNotes() {
       aria-labelledby="love-notes-heading"
       className="bg-[#f8f4f0] px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-12"
     >
-      <div className="mx-auto max-w-[1180px]">
+      <div className="mx-auto max-w-295">
         <motion.header
           {...(reduceMotion ? { initial: false } : {
             initial: { opacity: 0, y: 12 },

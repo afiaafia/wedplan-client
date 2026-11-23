@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   hasRole,
+  getDefaultDashboardRole,
+  getDashboardEntryPath,
   getPrimaryRole,
   getRoleDashboard,
   isRegistrationRole,
@@ -43,6 +45,24 @@ test("each role maps to its own dashboard", () => {
   assert.equal(getRoleDashboard("customer"), "/dashboard/customer");
   assert.equal(getRoleDashboard("vendor"), "/dashboard/vendor");
   assert.equal(getRoleDashboard("admin"), "/dashboard/admin");
+});
+
+test("ambiguous roles use the role-selection entry instead of choosing Vendor", () => {
+  assert.equal(getDefaultDashboardRole(["customer", "vendor"]), null);
+  assert.equal(getDashboardEntryPath(["customer", "vendor"]), "/dashboard");
+  assert.equal(getDefaultDashboardRole(["vendor"]), "vendor");
+  assert.equal(getDashboardEntryPath(["vendor"]), "/dashboard/vendor");
+});
+
+test("Admin remains the default dashboard role for accounts with multiple roles", () => {
+  assert.equal(
+    getDefaultDashboardRole(["customer", "vendor", "admin"]),
+    "admin"
+  );
+  assert.equal(
+    getDashboardEntryPath(["customer", "vendor", "admin"]),
+    "/dashboard/admin"
+  );
 });
 
 test("Admin has redirect priority when the account has multiple roles", () => {

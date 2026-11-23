@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerApiBaseUrl } from "@/lib/api-url";
 import {
+  getDashboardEntryPath,
+  getDefaultDashboardRole,
   getRoleDashboard,
-  getPrimaryRole,
   normalizeRoles,
-  type UserRole,
 } from "@/lib/roles";
 import {
   isProtectedAppPath,
@@ -43,10 +43,7 @@ export async function proxy(request: NextRequest) {
   const roles = session
     ? normalizeRoles(session.user.roles, session.user.role)
     : [];
-  const role: UserRole | null = session
-    ? getPrimaryRole(session.user.role, session.user.roles)
-    : null;
-  const roleDashboard = role ? getRoleDashboard(role) : null;
+  const dashboardEntry = getDashboardEntryPath(roles);
   const isBlocked = session?.user.isBlocked === true;
 
   if (isProtected && !session) {
@@ -64,7 +61,7 @@ export async function proxy(request: NextRequest) {
 
   if (isProtected && roles.length > 0 && !isRouteAllowedForRoles(pathname, roles)) {
     return NextResponse.redirect(
-      new URL(roleDashboard ?? getRoleDashboard(role), request.url)
+      new URL(dashboardEntry, request.url)
     );
   }
 
@@ -87,17 +84,16 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const authDashboardRole =
-    role === "admin"
-      ? "admin"
-      : pathname === "/vendor/sign-in" && roles.includes("vendor")
-        ? "vendor"
-        : role;
+  const authDashboardRole = roles.includes("admin")
+    ? "admin"
+    : pathname === "/vendor/sign-in" && roles.includes("vendor")
+      ? "vendor"
+      : getDefaultDashboardRole(roles);
   const authDashboard = authDashboardRole
     ? getRoleDashboard(authDashboardRole)
-    : null;
+    : "/dashboard";
   const defaultAuthTarget =
-    role === "admin"
+    roles.includes("admin")
       ? getRoleDashboard("admin")
       : pathname === "/sign-up" &&
           request.nextUrl.searchParams.get("role") === "vendor" &&
@@ -107,7 +103,7 @@ export async function proxy(request: NextRequest) {
           : "/vendor/onboarding"
         : authDashboard;
 
-  if (isAuthPath && session && !isBlocked && defaultAuthTarget && authDashboardRole) {
+  if (isAuthPath && session && !isBlocked && defaultAuthTarget) {
     const requestedPath = getSafePostAuthRedirect(
       request.nextUrl.searchParams.get("callbackURL"),
       request.nextUrl.searchParams.get("redirect"),

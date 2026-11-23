@@ -157,7 +157,7 @@ export default function AdminTransactions() {
         </p>
       ) : (
         <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-xs">
+          <table className="w-full min-w-190 text-left text-xs">
             <thead className="text-muted">
               <tr className="border-b border-border/70">
                 <th className="py-2 font-medium">Vendor</th>

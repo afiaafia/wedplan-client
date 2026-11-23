@@ -10,7 +10,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
-import { getPrimaryRole, getRoleDashboard, normalizeRoles } from "@/lib/roles";
+import {
+  getRoleDashboard,
+  normalizeRoles,
+} from "@/lib/roles";
+import { useActiveDashboardRole } from "@/lib/use-active-dashboard-role";
 import { useHydrationComplete } from "./use-hydration-complete";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -22,22 +26,31 @@ export default function HeroContent() {
   const { data: session, isPending } = useSession();
   const user = session?.user;
   const roles = normalizeRoles(user?.roles, user?.role);
-  const role = user ? getPrimaryRole(user.role, roles) : null;
+  const role = useActiveDashboardRole(
+    session?.session?.id ?? null,
+    roles.join("|"),
+    "/"
+  );
 
   const primaryCta = role
     ? { href: getRoleDashboard(role, roles), label: "Go to Dashboard" }
-    : { href: "/services", label: "Explore Wedding Services" };
+    : user
+      ? { href: "/dashboard", label: "Choose Dashboard" }
+      : { href: "/services", label: "Explore Wedding Services" };
 
-  const secondaryCta = !role
+  const secondaryCta = !user
     ? { href: "/sign-up?role=vendor", label: "Become a Vendor" }
     : role === "customer"
       ? { href: "/vendor/onboarding", label: "Become a Vendor" }
       : role === "admin"
         ? { href: "/vendor", label: "Become a Vendor" }
         : { href: "/services", label: "Explore Wedding Services" };
-  const showSecondaryCta = !isPending && role !== "vendor";
-  const bookingsHref = !role
+  const showSecondaryCta =
+    !isPending && (!user || role === "customer" || role === "admin");
+  const bookingsHref = !user
     ? `/sign-in?callbackURL=${encodeURIComponent("/dashboard/customer/bookings")}`
+    : !role
+      ? "/dashboard"
     : role === "vendor"
       ? "/dashboard/vendor/bookings"
       : role === "admin"
@@ -45,7 +58,9 @@ export default function HeroContent() {
         : "/dashboard/customer/bookings";
   const dashboardHref = role
     ? getRoleDashboard(role, roles)
-    : `/sign-in?callbackURL=${encodeURIComponent("/dashboard/customer")}`;
+    : user
+      ? "/dashboard"
+      : `/sign-in?callbackURL=${encodeURIComponent("/dashboard/customer")}`;
 
   const fadeUp = (delay: number) => ({
     initial: reduceMotion ? false : { opacity: 0, y: 18 },

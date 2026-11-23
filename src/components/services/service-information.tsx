@@ -51,7 +51,7 @@ export default function ServiceInformation({
             {service.price > 0 ? formatPrice(service.price) : "On request"}
           </p>
         </div>
-        <p className="max-w-[220px] text-xs leading-5 text-muted">
+        <p className="max-w-55 text-xs leading-5 text-muted">
           Final details and availability are confirmed by the vendor after you
           send a request.
         </p>

@@ -37,7 +37,7 @@ export default function BookingConfirmation({
         </p>
         <p className="flex items-start gap-2.5 text-sm text-foreground">
           <MapPin size={16} className="mt-0.5 shrink-0 text-accent" />
-          <span className="break-words">{booking.eventLocation}</span>
+          <span className="wrap-break-word">{booking.eventLocation}</span>
         </p>
         <p className="flex items-start gap-2.5 text-sm text-foreground">
           <Clock3 size={16} className="mt-0.5 shrink-0 text-accent" />

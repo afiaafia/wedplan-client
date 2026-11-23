@@ -33,7 +33,7 @@ export default async function ServiceDetailPage({
 
   return (
     <main className="min-h-screen px-4 pb-20 pt-32 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-[1380px]">
+      <div className="mx-auto max-w-345">
         <ServiceDetails id={id} />
       </div>
     </main>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Camera, Loader2, Save, UserRound } from "lucide-react";
 import { useToast } from "@/components/layout/toast-provider";
 import { authClient } from "@/lib/auth-client";
@@ -124,9 +125,12 @@ export default function CustomerProfileSettings({
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-xl font-semibold text-primary">
             {imagePreview || image ? (
-              <img
-                src={imagePreview ?? image ?? undefined}
+              <Image
+                src={imagePreview ?? image ?? ""}
                 alt="Your profile"
+                width={96}
+                height={96}
+                unoptimized
                 className="h-full w-full object-cover"
               />
             ) : (

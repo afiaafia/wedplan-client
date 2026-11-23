@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle,
@@ -133,7 +134,7 @@ export default function CustomerBookingDetails({ bookingId }: { bookingId: strin
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Venue
                   </p>
-                  <p className="mt-1 break-words text-sm font-medium text-foreground">
+                  <p className="mt-1 wrap-break-word text-sm font-medium text-foreground">
                     {booking.eventLocation || "To be confirmed"}
                   </p>
                 </div>
@@ -189,9 +190,12 @@ export default function CustomerBookingDetails({ bookingId }: { bookingId: strin
               <div className="mt-4 flex gap-4">
                 <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-primary">
                   {booking.service?.image ? (
-                    <img
+                    <Image
                       src={booking.service.image}
                       alt=""
+                      width={80}
+                      height={80}
+                      unoptimized
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -228,9 +232,12 @@ export default function CustomerBookingDetails({ bookingId }: { bookingId: strin
               <div className="mt-4 flex items-center gap-4">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-primary">
                   {booking.vendor?.profileImage ? (
-                    <img
+                    <Image
                       src={booking.vendor.profileImage}
                       alt=""
+                      width={56}
+                      height={56}
+                      unoptimized
                       className="h-full w-full object-cover"
                     />
                   ) : (

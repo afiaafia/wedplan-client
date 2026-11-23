@@ -7,7 +7,7 @@ function HeroCarouselFallback() {
     <div
       aria-label="Loading wedding service inspiration"
       aria-busy="true"
-      className="relative h-[clamp(240px,72vw,310px)] w-full animate-pulse overflow-hidden rounded-[24px] bg-secondary sm:h-[360px] sm:rounded-[36px] lg:h-[520px]"
+      className="relative h-[clamp(240px,72vw,310px)] w-full animate-pulse overflow-hidden rounded-3xl bg-secondary sm:h-90 sm:rounded-[36px] lg:h-130"
     >
       <div className="absolute inset-x-6 bottom-7 space-y-3">
         <div className="h-4 w-28 rounded-full bg-card/60" />

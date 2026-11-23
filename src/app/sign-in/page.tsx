@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth-server";
 import { getSafePostAuthRedirect } from "@/lib/route-access";
-import { getRoleDashboard, normalizeRoles } from "@/lib/roles";
+import { resolvePostAuthDestination } from "@/lib/active-role";
+import { normalizeRoles } from "@/lib/roles";
 import AuthForm from "@/components/auth/auth-form";
 
 export const instant = false;
@@ -22,16 +23,14 @@ export default async function SignInPage({
   const session = await getServerSession();
   if (session) {
     const params = await searchParams;
+    const roles = normalizeRoles(session.user.roles, session.user.role);
     const requestedPath = getSafePostAuthRedirect(
       typeof params.callbackURL === "string" ? params.callbackURL : null,
       typeof params.redirect === "string" ? params.redirect : null,
       process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-      normalizeRoles(session.user.roles, session.user.role)
+      roles
     );
-    redirect(
-      requestedPath ??
-        getRoleDashboard(session.user.role, session.user.roles)
-    );
+    redirect(resolvePostAuthDestination(roles, requestedPath).target);
   }
 
   return <AuthForm mode="sign-in" />;

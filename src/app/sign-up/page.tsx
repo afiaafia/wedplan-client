@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth-server";
-import { getRoleDashboard } from "@/lib/roles";
+import { getDashboardEntryPath, normalizeRoles } from "@/lib/roles";
 import AuthForm from "@/components/auth/auth-form";
 
 export const instant = false;
@@ -14,7 +14,11 @@ export const metadata: Metadata = {
 export default async function SignUpPage() {
   const session = await getServerSession();
   if (session) {
-    redirect(getRoleDashboard(session.user.role, session.user.roles));
+    redirect(
+      getDashboardEntryPath(
+        normalizeRoles(session.user.roles, session.user.role)
+      )
+    );
   }
 
   return <AuthForm mode="sign-up" />;

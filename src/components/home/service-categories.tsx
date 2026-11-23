@@ -58,7 +58,7 @@ export default function ServiceCategories() {
       aria-labelledby="categories-heading"
       className="bg-secondary/45 px-4 py-12 sm:px-6 md:py-16 lg:px-10 lg:py-24"
     >
-      <div className="mx-auto max-w-[1380px]">
+      <div className="mx-auto max-w-345">
         <motion.header
           {...revealProps}
           variants={itemVariants}
@@ -106,7 +106,7 @@ function CategoryCard({
       <Link
         href={homeCategoryHref(category)}
         aria-label={`Browse ${category.label} services`}
-        className="group relative flex h-[194px] flex-col justify-end overflow-hidden rounded-xl bg-[#3b2d31] shadow-[0_8px_30px_rgba(48,39,42,0.08)] outline-none transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(48,39,42,0.16)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:hover:translate-y-0 sm:h-[220px] sm:rounded-2xl lg:h-72"
+        className="group relative flex h-48.5 flex-col justify-end overflow-hidden rounded-xl bg-[#3b2d31] shadow-[0_8px_30px_rgba(48,39,42,0.08)] outline-none transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(48,39,42,0.16)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:hover:translate-y-0 sm:h-55 sm:rounded-2xl lg:h-72"
       >
         {!imageFailed && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -122,7 +122,7 @@ function CategoryCard({
 
         <span
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-[#30272a]/90 via-[#30272a]/40 to-[#30272a]/5"
+          className="absolute inset-0 bg-linear-to-t from-[#30272a]/90 via-[#30272a]/40 to-[#30272a]/5"
         />
 
         <span         className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/50 bg-white/15 text-white backdrop-blur-sm transition-colors group-hover:bg-white group-hover:text-primary motion-reduce:transition-none sm:right-4 sm:top-4 sm:h-9 sm:w-9 lg:right-5 lg:top-5 lg:h-10 lg:w-10">

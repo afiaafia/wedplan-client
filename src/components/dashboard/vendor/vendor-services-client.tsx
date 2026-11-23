@@ -219,7 +219,7 @@ export default function VendorServicesClient({
         </p>
       ) : (
         <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[880px] text-left text-sm">
+          <table className="w-full min-w-220 text-left text-sm">
             <thead>
               <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted">
                 <th className="py-2">Service</th>

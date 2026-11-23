@@ -31,7 +31,7 @@ export default function FeaturedServiceCard({
       className="group block h-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
     >
       <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_8px_30px_rgba(48,39,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_18px_45px_rgba(48,39,42,0.11)]">
-      <div className="relative aspect-[16/10] overflow-hidden bg-secondary lg:aspect-[4/3]">
+      <div className="relative aspect-16/10 overflow-hidden bg-secondary lg:aspect-4/3">
         {showImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

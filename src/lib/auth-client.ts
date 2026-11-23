@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import { inferAdditionalFields } from "better-auth/client/plugins";
+import { clearSessionActiveRole } from "./active-role";
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:5000",
@@ -40,4 +41,10 @@ export const authClient = createAuthClient({
   ],
 });
 
-export const { signIn, signUp, signOut, useSession, getSession } = authClient;
+export const { signIn, signUp, useSession, getSession } = authClient;
+
+export const signOut: typeof authClient.signOut = async (...args) => {
+  const result = await authClient.signOut(...args);
+  if (!("error" in result) || !result.error) clearSessionActiveRole();
+  return result;
+};

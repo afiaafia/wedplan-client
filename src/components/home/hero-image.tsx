@@ -122,7 +122,7 @@ function WeddingSlide({
 
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-[#21191a]/80 via-[#21191a]/15 to-[#21191a]/5"
+        className="absolute inset-0 bg-linear-to-t from-[#21191a]/80 via-[#21191a]/15 to-[#21191a]/5"
       />
 
       <div
@@ -141,7 +141,7 @@ function WeddingSlide({
           </span>
         </div>
 
-        <div className="absolute inset-x-4 bottom-[68px] max-w-[84%] text-white sm:inset-x-7 sm:bottom-[88px]">
+        <div className="absolute inset-x-4 bottom-17 max-w-[84%] text-white sm:inset-x-7 sm:bottom-22">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/75 sm:text-[11px]">
             {slide.title}
           </p>
@@ -185,13 +185,13 @@ export default function HeroImage({
       initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.99 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className="relative mx-auto min-w-0 w-full max-w-[680px]"
+      className="relative mx-auto min-w-0 w-full max-w-170"
     >
       <div
         role="region"
         aria-roledescription="carousel"
         aria-label="Wedding service categories"
-        className="relative h-[clamp(240px,72vw,310px)] overflow-hidden rounded-[24px] bg-secondary shadow-[0_20px_48px_rgba(48,39,42,0.14)] ring-1 ring-white/70 sm:h-[360px] sm:rounded-[36px] lg:h-[520px] lg:shadow-[0_28px_75px_rgba(48,39,42,0.17)]"
+        className="relative h-[clamp(240px,72vw,310px)] overflow-hidden rounded-3xl bg-secondary shadow-[0_20px_48px_rgba(48,39,42,0.14)] ring-1 ring-white/70 sm:h-90 sm:rounded-[36px] lg:h-130 lg:shadow-[0_28px_75px_rgba(48,39,42,0.17)]"
       >
         <Swiper
           modules={[Autoplay, EffectFade, Keyboard]}

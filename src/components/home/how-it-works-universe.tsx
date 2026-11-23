@@ -415,7 +415,7 @@ export default function HowItWorksUniverse({
 
       <svg
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-7 left-[28px] top-8 z-0 w-1 sm:hidden"
+        className="pointer-events-none absolute bottom-7 left-7 top-8 z-0 w-1 sm:hidden"
         viewBox="0 0 4 100"
         preserveAspectRatio="none"
       >
@@ -428,7 +428,7 @@ export default function HowItWorksUniverse({
       </svg>
       <svg
         aria-hidden="true"
-        className="pointer-events-none absolute left-0 right-0 top-[28px] z-0 hidden h-[76px] w-full sm:block"
+        className="pointer-events-none absolute left-0 right-0 top-7 z-0 hidden h-19 w-full sm:block"
         viewBox="0 0 1000 76"
         preserveAspectRatio="none"
       >
@@ -468,7 +468,7 @@ export default function HowItWorksUniverse({
               aria-expanded={selected}
               aria-controls="how-it-works-workflow-panel"
               onClick={() => onSelectRole(role)}
-              className={`relative flex min-h-[64px] w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:min-h-[92px] sm:flex-col sm:justify-center sm:gap-1.5 sm:px-2 sm:text-center lg:min-h-[108px] ${
+              className={`relative flex min-h-16 w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:min-h-23 sm:flex-col sm:justify-center sm:gap-1.5 sm:px-2 sm:text-center lg:min-h-27 ${
                 selected
                   ? "border-champagne/60 bg-champagne/10 shadow-sm"
                   : "border-border/80 bg-card/90 hover:border-champagne/45 hover:bg-secondary/60"
@@ -560,10 +560,10 @@ export function RoleWorkflowPanel({
               {index < workflow.steps.length - 1 && (
                 <span
                   aria-hidden="true"
-                  className="absolute bottom-[-4px] left-[12px] top-7 w-px bg-champagne/40 lg:bottom-[-5px] lg:left-[13px] lg:top-8"
+                  className="absolute -bottom-1 left-3 top-7 w-px bg-champagne/40 lg:-bottom-1.25 lg:left-3.25 lg:top-8"
                 />
               )}
-              <span className="relative z-10 flex h-[26px] w-[26px] items-center justify-center rounded-full border border-champagne/40 bg-background text-[10px] font-semibold text-primary lg:h-7 lg:w-7">
+              <span className="relative z-10 flex h-6.5 w-6.5 items-center justify-center rounded-full border border-champagne/40 bg-background text-[10px] font-semibold text-primary lg:h-7 lg:w-7">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0 pb-1">

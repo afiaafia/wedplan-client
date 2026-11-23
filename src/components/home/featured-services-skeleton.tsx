@@ -7,7 +7,7 @@ export default function FeaturedServicesSkeleton() {
       aria-labelledby="featured-services-heading"
       className="px-4 pb-12 pt-2 sm:px-6 md:pb-16 lg:px-10 lg:pb-20 lg:pt-4"
     >
-      <div className="mx-auto max-w-[1380px]">
+      <div className="mx-auto max-w-345">
         <FeaturedServicesHeader />
 
         <div aria-busy="true" aria-live="polite">
@@ -18,7 +18,7 @@ export default function FeaturedServicesSkeleton() {
                 key={index}
                 className="overflow-hidden rounded-2xl border border-border/80 bg-card/70"
               >
-                <div className="aspect-[16/10] animate-pulse bg-secondary lg:aspect-[4/3]" />
+                <div className="aspect-16/10 animate-pulse bg-secondary lg:aspect-4/3" />
                 <div className="space-y-3 p-4 lg:p-6">
                   <div className="h-6 w-3/4 animate-pulse rounded bg-secondary" />
                   <div className="h-4 w-full animate-pulse rounded bg-secondary" />

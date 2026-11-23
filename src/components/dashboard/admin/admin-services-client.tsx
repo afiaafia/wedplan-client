@@ -252,7 +252,7 @@ export default function AdminServicesClient() {
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search services"
           aria-label="Search services"
-          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-[220px] sm:flex-1"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-55 sm:flex-1"
         />
         <input
           type="search"
@@ -260,7 +260,7 @@ export default function AdminServicesClient() {
           onChange={(event) => setVendor(event.target.value)}
           placeholder="Vendor name or email"
           aria-label="Filter by vendor name or email"
-          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-[200px] sm:flex-1"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-50 sm:flex-1"
         />
         <select
           value={approval}
@@ -327,7 +327,7 @@ export default function AdminServicesClient() {
         ) : (
           <>
             <div className="hidden overflow-x-auto lg:block">
-            <table className="w-full min-w-[960px] text-left text-sm">
+            <table className="w-full min-w-240 text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted">
                   <th className="px-4 py-3">Service</th>
@@ -487,13 +487,13 @@ export default function AdminServicesClient() {
                       </span>
                     )}
                     <div className="min-w-0 flex-1">
-                      <h2 className="break-words font-semibold text-foreground">
+                      <h2 className="wrap-break-word font-semibold text-foreground">
                         {service.title}
                       </h2>
-                      <p className="mt-1 break-words text-xs text-muted">
+                      <p className="mt-1 wrap-break-word text-xs text-muted">
                         {service.location}
                       </p>
-                      <p className="mt-1 break-words text-xs text-muted">
+                      <p className="mt-1 wrap-break-word text-xs text-muted">
                         {service.vendorName || "Vendor"}
                         {service.vendorEmail ? ` · ${service.vendorEmail}` : ""}
                       </p>
@@ -502,15 +502,15 @@ export default function AdminServicesClient() {
                   <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-xs">
                     <div className="min-w-0">
                       <dt className="text-muted">Category</dt>
-                      <dd className="mt-1 break-words font-medium text-foreground">{service.category}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium text-foreground">{service.category}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted">Price</dt>
-                      <dd className="mt-1 break-words font-medium text-foreground">{formatVendorPrice(service.price)}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium text-foreground">{formatVendorPrice(service.price)}</dd>
                     </div>
                     <div className="min-w-0">
                       <dt className="text-muted">Submitted</dt>
-                      <dd className="mt-1 break-words font-medium text-foreground">{formatEventDate(service.createdAt)}</dd>
+                      <dd className="mt-1 wrap-break-word font-medium text-foreground">{formatEventDate(service.createdAt)}</dd>
                     </div>
                     <div>
                       <dt className="text-muted">Approval</dt>
@@ -534,7 +534,7 @@ export default function AdminServicesClient() {
                     </div>
                   </dl>
                   {service.rejectionReason && (
-                    <p className="mt-3 break-words text-xs text-error">
+                    <p className="mt-3 wrap-break-word text-xs text-error">
                       Reason: {service.rejectionReason}
                     </p>
                   )}
@@ -631,11 +631,11 @@ export default function AdminServicesClient() {
               <div className="min-w-0">
                 <h2
                   id="admin-service-rejection-title"
-                  className="break-words font-serif text-2xl text-foreground"
+                  className="wrap-break-word font-serif text-2xl text-foreground"
                 >
                   Reject service
                 </h2>
-                <p className="mt-1 break-words text-sm text-muted">
+                <p className="mt-1 wrap-break-word text-sm text-muted">
                   Add a reason for {rejection.title}.
                 </p>
               </div>
@@ -701,11 +701,11 @@ export default function AdminServicesClient() {
               <div className="min-w-0">
                 <h2
                   id="admin-service-detail-title"
-                  className="break-words font-serif text-2xl text-foreground"
+                  className="wrap-break-word font-serif text-2xl text-foreground"
                 >
                   {detail.title}
                 </h2>
-                <p className="mt-1 break-words text-xs text-muted">
+                <p className="mt-1 wrap-break-word text-xs text-muted">
                   {detail.category} · {detail.location} ·{" "}
                   {formatVendorPrice(detail.price)}
                 </p>
@@ -776,7 +776,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4">
       <dt className="shrink-0 text-muted">{label}</dt>
-      <dd className="min-w-0 break-words text-right font-medium capitalize text-foreground">{value}</dd>
+      <dd className="min-w-0 wrap-break-word text-right font-medium capitalize text-foreground">{value}</dd>
     </div>
   );
 }

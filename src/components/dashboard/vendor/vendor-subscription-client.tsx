@@ -238,7 +238,7 @@ export default function VendorSubscriptionClient() {
             </p>
           ) : (
             <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[520px] text-left text-xs">
+              <table className="w-full min-w-130 text-left text-xs">
                 <thead className="text-muted">
                   <tr className="border-b border-border/70">
                     <th className="py-2 font-medium">Date</th>

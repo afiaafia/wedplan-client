@@ -46,6 +46,18 @@ export function isRouteAllowedForRoles(
   pathname: string,
   roles: readonly UserRole[]
 ): boolean {
+  const requestedDashboardRole = pathname.match(
+    /^\/dashboard\/(customer|vendor|admin)(?:\/|$)/
+  )?.[1];
+
+  if (
+    roles.includes("admin") &&
+    requestedDashboardRole !== undefined &&
+    requestedDashboardRole !== "admin"
+  ) {
+    return false;
+  }
+
   const rule = ROUTE_RULES.find(
     (candidate) =>
       pathname === candidate.prefix || pathname.startsWith(`${candidate.prefix}/`)

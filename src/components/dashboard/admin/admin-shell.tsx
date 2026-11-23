@@ -89,8 +89,8 @@ export default function AdminShell({
 
   return (
     <div className="relative min-h-screen overflow-x-clip">
-      <div className="pointer-events-none absolute left-[-220px] top-32 h-96 w-96 rounded-full bg-accent/10 blur-[130px]" />
-      <div className="pointer-events-none absolute bottom-0 right-[-140px] h-96 w-96 rounded-full bg-champagne/15 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-55 top-32 h-96 w-96 rounded-full bg-accent/10 blur-[130px]" />
+      <div className="pointer-events-none absolute bottom-0 -right-35 h-96 w-96 rounded-full bg-champagne/15 blur-[120px]" />
 
       <button
         type="button"
@@ -98,7 +98,7 @@ export default function AdminShell({
         aria-label="Open admin dashboard navigation"
         aria-expanded={open}
         aria-controls="admin-navigation-drawer"
-        className="fixed left-4 top-[104px] z-40 flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-primary shadow-md backdrop-blur-xl xl:hidden"
+        className="fixed left-4 top-26 z-40 flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-primary shadow-md backdrop-blur-xl xl:hidden"
       >
         <Menu size={20} />
       </button>
@@ -108,7 +108,7 @@ export default function AdminShell({
           type="button"
           aria-label="Close admin dashboard navigation"
           onClick={() => setOpen(false)}
-          className="fixed inset-x-0 bottom-0 top-[88px] z-30 bg-foreground/25 backdrop-blur-[2px] xl:hidden"
+          className="fixed inset-x-0 bottom-0 top-22 z-30 bg-foreground/25 backdrop-blur-[2px] xl:hidden"
         />
       )}
 
@@ -117,7 +117,7 @@ export default function AdminShell({
         role={open ? "dialog" : undefined}
         aria-modal={open ? true : undefined}
         aria-label="Admin dashboard navigation"
-        className={`fixed bottom-4 left-4 top-[104px] z-40 flex w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(48,39,42,0.12)] backdrop-blur-2xl transition-transform duration-300 xl:translate-x-0 ${
+        className={`fixed bottom-4 left-4 top-26 z-40 flex w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(48,39,42,0.12)] backdrop-blur-2xl transition-transform duration-300 xl:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-[120%]"
         }`}
       >
@@ -204,7 +204,7 @@ export default function AdminShell({
       </aside>
 
       <main className="relative z-10 min-w-0 px-4 pb-16 pt-[168px] sm:px-6 xl:pl-[320px] xl:pr-8 xl:pt-32">
-        <div className="mx-auto min-w-0 max-w-[1400px]">{children}</div>
+        <div className="mx-auto min-w-0 max-w-350">{children}</div>
       </main>
     </div>
   );

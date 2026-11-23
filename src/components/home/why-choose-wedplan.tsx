@@ -76,7 +76,7 @@ export default function WhyChooseWedPlan() {
       aria-labelledby="why-choose-heading"
       className="px-4 py-12 sm:px-6 md:py-16 lg:px-10 lg:py-24"
     >
-      <div className="mx-auto max-w-[1380px]">
+      <div className="mx-auto max-w-345">
         <motion.header
           {...revealProps}
           variants={itemVariants}

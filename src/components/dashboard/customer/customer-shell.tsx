@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
@@ -71,15 +72,15 @@ export default function CustomerShell({
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <div className="pointer-events-none absolute left-[-220px] top-32 h-96 w-96 rounded-full bg-accent/10 blur-[130px]" />
-      <div className="pointer-events-none absolute bottom-0 right-[-140px] h-96 w-96 rounded-full bg-champagne/15 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-55 top-32 h-96 w-96 rounded-full bg-accent/10 blur-[130px]" />
+      <div className="pointer-events-none absolute bottom-0 -right-35 h-96 w-96 rounded-full bg-champagne/15 blur-[120px]" />
 
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open customer dashboard navigation"
         aria-expanded={open}
-        className="fixed left-4 top-[104px] z-40 flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-primary shadow-md backdrop-blur-xl lg:hidden"
+        className="fixed left-4 top-26 z-40 flex h-11 w-11 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-primary shadow-md backdrop-blur-xl lg:hidden"
       >
         <Menu size={20} />
       </button>
@@ -89,12 +90,12 @@ export default function CustomerShell({
           type="button"
           aria-label="Close customer dashboard navigation"
           onClick={() => setOpen(false)}
-          className="fixed inset-x-0 bottom-0 top-[88px] z-30 bg-foreground/25 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-x-0 bottom-0 top-22 z-30 bg-foreground/25 backdrop-blur-[2px] lg:hidden"
         />
       )}
 
       <aside
-        className={`fixed bottom-4 left-4 top-[104px] z-40 flex w-[280px] flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(48,39,42,0.12)] backdrop-blur-2xl transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed bottom-4 left-4 top-26 z-40 flex w-70 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(48,39,42,0.12)] backdrop-blur-2xl transition-transform duration-300 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-[120%]"
         }`}
       >
@@ -102,9 +103,12 @@ export default function CustomerShell({
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-primary">
               {user.image ? (
-                <img
+                <Image
                   src={user.image}
                   alt=""
+                  width={44}
+                  height={44}
+                  unoptimized
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -177,7 +181,7 @@ export default function CustomerShell({
       </aside>
 
       <main className="relative z-10 px-4 pb-16 pt-[168px] sm:px-6 lg:pl-[320px] lg:pr-8 lg:pt-32">
-        <div className="mx-auto max-w-[1400px]">
+        <div className="mx-auto max-w-350">
           <header className="mb-8 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-2xl">
               <div className="flex flex-wrap items-center gap-3">

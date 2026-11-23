@@ -114,7 +114,7 @@ export default function AdminOverviewClient() {
                 key={item.key}
                 className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-sm"
               >
-                <p className="break-words text-xs font-medium uppercase tracking-wide text-muted">
+                <p className="wrap-break-word text-xs font-medium uppercase tracking-wide text-muted">
                   {item.label}
                 </p>
                 <p className="mt-3 font-serif text-3xl text-foreground">
@@ -289,14 +289,14 @@ function RecentList({
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="break-words text-sm font-medium text-foreground">
+            <p className="wrap-break-word text-sm font-medium text-foreground">
               {item.primary}
             </p>
-            <p className="mt-0.5 break-words text-xs leading-5 text-muted">
+            <p className="mt-0.5 wrap-break-word text-xs leading-5 text-muted">
               {item.secondary}
             </p>
           </div>
-          <span className="max-w-20 shrink-0 break-words text-right text-[11px] text-muted sm:max-w-none">
+          <span className="max-w-20 shrink-0 wrap-break-word text-right text-[11px] text-muted sm:max-w-none">
             {item.meta}
           </span>
         </li>

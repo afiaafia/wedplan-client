@@ -9,14 +9,14 @@ export default function HeroSection() {
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-40 top-24 h-[420px] w-[420px] rounded-full bg-[#F1E4DE]/70 blur-[110px] dark:bg-primary/5"
+        className="pointer-events-none absolute -left-40 top-24 h-105 w-105 rounded-full bg-[#F1E4DE]/70 blur-[110px] dark:bg-primary/5"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-32 bottom-0 h-[360px] w-[360px] rounded-full bg-champagne/10 blur-[100px]"
+        className="pointer-events-none absolute -right-32 bottom-0 h-90 w-90 rounded-full bg-champagne/10 blur-[100px]"
       />
 
-      <div className="relative mx-auto grid w-full max-w-[1380px] grid-cols-1 items-center gap-6 px-4 sm:gap-8 sm:px-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-14 lg:px-14">
+      <div className="relative mx-auto grid w-full max-w-345 grid-cols-1 items-center gap-6 px-4 sm:gap-8 sm:px-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-14 lg:px-14">
         <HeroContent />
         <HeroCarousel />
       </div>

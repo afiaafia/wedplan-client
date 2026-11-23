@@ -20,7 +20,7 @@ export default function AdminPageShell({
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-champagne">
             {eyebrow}
           </p>
-          <h1 className="mt-2 break-words font-serif text-3xl leading-tight text-foreground sm:text-4xl">
+          <h1 className="mt-2 wrap-break-word font-serif text-3xl leading-tight text-foreground sm:text-4xl">
             {title}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">

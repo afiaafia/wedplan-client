@@ -45,8 +45,8 @@ export function RoleDashboard({
 
   return (
     <main className="relative min-h-screen overflow-hidden px-4 pb-16 pt-32 sm:px-6">
-      <div className="pointer-events-none absolute left-[-160px] top-32 h-96 w-96 rounded-full bg-accent/10 blur-[120px]" />
-      <div className="pointer-events-none absolute bottom-0 right-[-100px] h-80 w-80 rounded-full bg-champagne/15 blur-[100px]" />
+      <div className="pointer-events-none absolute -left-40 top-32 h-96 w-96 rounded-full bg-accent/10 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-0 -right-25 h-80 w-80 rounded-full bg-champagne/15 blur-[100px]" />
 
       <div className="relative z-10 mx-auto max-w-5xl">
         <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">

@@ -113,7 +113,7 @@ export default function AdminBookingsClient() {
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search bookings"
           aria-label="Search bookings"
-          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-[220px] sm:flex-1"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary sm:min-w-55 sm:flex-1"
         />
         <select
           value={status}
@@ -180,7 +180,7 @@ export default function AdminBookingsClient() {
         ) : (
           <>
             <div className="hidden overflow-x-auto lg:block">
-            <table className="w-full min-w-[1000px] text-left text-sm">
+            <table className="w-full min-w-250 text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted">
                   <th className="px-4 py-3">Service</th>
@@ -252,7 +252,7 @@ export default function AdminBookingsClient() {
                   className="rounded-xl border border-border/70 bg-background/60 p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h2 className="min-w-0 break-words font-semibold text-foreground">
+                    <h2 className="min-w-0 wrap-break-word font-semibold text-foreground">
                       {booking.serviceTitle}
                     </h2>
                     <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold capitalize text-primary">
@@ -275,23 +275,23 @@ export default function AdminBookingsClient() {
                             getInitials(booking.customer.name)
                           )}
                         </span>
-                        <span className="min-w-0 break-words font-medium text-foreground">
+                        <span className="min-w-0 wrap-break-word font-medium text-foreground">
                           {booking.customer.name}
                         </span>
                       </div>
                     </div>
                     <div className="min-w-0">
                       <p className="text-muted">Vendor</p>
-                      <p className="mt-1 break-words font-medium text-foreground">{booking.vendor.name}</p>
+                      <p className="mt-1 wrap-break-word font-medium text-foreground">{booking.vendor.name}</p>
                     </div>
                     <div className="min-w-0">
                       <p className="text-muted">Event</p>
-                      <p className="mt-1 break-words font-medium text-foreground">{formatEventDate(booking.eventDate)}</p>
-                      <p className="mt-0.5 break-words text-muted">{booking.eventLocation || "Location TBC"}</p>
+                      <p className="mt-1 wrap-break-word font-medium text-foreground">{formatEventDate(booking.eventDate)}</p>
+                      <p className="mt-0.5 wrap-break-word text-muted">{booking.eventLocation || "Location TBC"}</p>
                     </div>
                     <div className="min-w-0">
                       <p className="text-muted">Requested</p>
-                      <p className="mt-1 break-words font-medium text-foreground">{formatEventDate(booking.createdAt)}</p>
+                      <p className="mt-1 wrap-break-word font-medium text-foreground">{formatEventDate(booking.createdAt)}</p>
                     </div>
                   </div>
                   <button
@@ -354,7 +354,7 @@ export default function AdminBookingsClient() {
               <div className="min-w-0">
                 <h2
                   id="admin-booking-detail-title"
-                  className="break-words font-serif text-2xl text-foreground"
+                  className="wrap-break-word font-serif text-2xl text-foreground"
                 >
                   {detail.serviceTitle}
                 </h2>
@@ -416,7 +416,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-2 last:border-0">
       <dt className="shrink-0 text-muted">{label}</dt>
-      <dd className="min-w-0 break-words text-right font-medium text-foreground">{value}</dd>
+      <dd className="min-w-0 wrap-break-word text-right font-medium text-foreground">{value}</dd>
     </div>
   );
 }

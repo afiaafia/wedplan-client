@@ -61,3 +61,17 @@ export function getRoleDashboard(role: unknown, roles?: unknown): string {
       return "/dashboard/customer";
   }
 }
+
+export function getDefaultDashboardRole(
+  roles: readonly UserRole[]
+): UserRole | null {
+  if (roles.includes("admin")) return "admin";
+
+  const distinctRoles = [...new Set(roles)];
+  return distinctRoles.length === 1 ? distinctRoles[0] ?? null : null;
+}
+
+export function getDashboardEntryPath(roles: readonly UserRole[]): string {
+  const role = getDefaultDashboardRole(roles);
+  return role ? getRoleDashboard(role) : "/dashboard";
+}

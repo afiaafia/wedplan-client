@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getServerApiBaseUrl } from "@/lib/api-url";
 import {
-  getRoleDashboard,
+  getDashboardEntryPath,
   normalizeRoles,
   type UserRole,
 } from "@/lib/roles";
@@ -110,10 +110,19 @@ export async function requireRole(allowedRoles: readonly UserRole[]): Promise<{
 }> {
   const session = await requireSession();
   const roles = normalizeRoles(session.user.roles, session.user.role);
+
+  if (roles.includes("admin")) {
+    if (!allowedRoles.includes("admin")) {
+      redirect("/dashboard/admin");
+    }
+
+    return { session, user: session.user, role: "admin" };
+  }
+
   const role = allowedRoles.find((allowedRole) => roles.includes(allowedRole));
 
   if (!role) {
-    redirect(getRoleDashboard(session.user.role, session.user.roles));
+    redirect(getDashboardEntryPath(roles));
   }
 
   return { session, user: session.user, role };

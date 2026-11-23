@@ -6,11 +6,12 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 import { ArrowRight, Crown } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import {
-  getPrimaryRole,
+  getDefaultDashboardRole,
   getRoleDashboard,
   normalizeRoles,
   type UserRole,
 } from "@/lib/roles";
+import { useActiveDashboardRole } from "@/lib/use-active-dashboard-role";
 import CustomerQuickGuide from "./customer-quick-guide";
 import HowItWorksUniverse, {
   CursorDust,
@@ -26,7 +27,7 @@ function signInCallback(path: string) {
 }
 
 function dashboardAction(roles: readonly UserRole[]): RoleAction {
-  const role = getPrimaryRole(roles[0], roles);
+  const role = getDefaultDashboardRole(roles);
 
   return {
     label:
@@ -34,8 +35,10 @@ function dashboardAction(roles: readonly UserRole[]): RoleAction {
         ? "Open Admin Dashboard"
         : role === "vendor"
           ? "Go to Vendor Dashboard"
-          : "Go to My Dashboard",
-    href: getRoleDashboard(role, roles),
+          : role === "customer"
+            ? "Go to My Dashboard"
+            : "Choose Dashboard",
+    href: role ? getRoleDashboard(role, roles) : "/dashboard",
   };
 }
 
@@ -167,21 +170,43 @@ function getRoleActions(
 
 function getClosingAction(
   roles: readonly UserRole[],
-  authPending: boolean
+  authPending: boolean,
+  activeRole: UserRole | null
 ): RoleAction | null {
   if (authPending) return null;
 
-  if (roles.includes("vendor")) {
+  if (roles.includes("admin")) {
+    return {
+      label: "Open Admin Dashboard",
+      href: "/dashboard/admin",
+    };
+  }
+
+  if (activeRole === "vendor") {
     return {
       label: "Manage My Services",
       href: "/dashboard/vendor/services",
     };
   }
 
-  if (roles.includes("admin")) {
+  if (activeRole === "customer" && roles.includes("vendor")) {
     return {
-      label: "Open Admin Dashboard",
-      href: "/dashboard/admin",
+      label: "Go to My Dashboard",
+      href: "/dashboard/customer",
+    };
+  }
+
+  if (roles.includes("customer") && roles.includes("vendor")) {
+    return {
+      label: "Choose Dashboard",
+      href: "/dashboard",
+    };
+  }
+
+  if (roles.includes("vendor")) {
+    return {
+      label: "Manage My Services",
+      href: "/dashboard/vendor/services",
     };
   }
 
@@ -244,9 +269,18 @@ export default function HowItWorks() {
     sessionResolved && session?.user
       ? normalizeRoles(session.user.roles, session.user.role)
       : [];
+  const selectedDashboardRole = useActiveDashboardRole(
+    session?.session?.id ?? null,
+    roles.join("|"),
+    "/"
+  );
   const authPending = !sessionResolved;
   const actions = getRoleActions(activeRole, roles, authPending);
-  const closingAction = getClosingAction(roles, authPending);
+  const closingAction = getClosingAction(
+    roles,
+    authPending,
+    selectedDashboardRole
+  );
   const premiumAction = getPremiumAction(roles, authPending);
 
   return (
@@ -326,7 +360,7 @@ export default function HowItWorks() {
           >
             <div className="flex min-w-0 items-start gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-champagne/25 bg-champagne/10 text-champagne sm:h-10 sm:w-10 sm:rounded-xl">
-                <Crown size={16} aria-hidden="true" className="sm:h-[18px] sm:w-[18px]" />
+                <Crown size={16} aria-hidden="true" className="sm:h-4.5 sm:w-4.5" />
               </span>
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-champagne">

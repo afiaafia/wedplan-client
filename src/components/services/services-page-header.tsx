@@ -24,7 +24,7 @@ export default function ServicesPageHeader({
   }
 
   return (
-    <section className="relative overflow-hidden rounded-[28px] border border-border/70 bg-gradient-to-br from-secondary via-card to-secondary px-5 py-9 sm:px-9 sm:py-12 lg:px-12">
+    <section className="relative overflow-hidden rounded-[28px] border border-border/70 bg-linear-to-br from-secondary via-card to-secondary px-5 py-9 sm:px-9 sm:py-12 lg:px-12">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full border border-accent/25 sm:h-96 sm:w-96"

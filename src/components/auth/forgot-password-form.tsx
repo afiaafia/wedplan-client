@@ -45,10 +45,10 @@ export default function ForgotPasswordForm() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 pb-12 pt-32 sm:px-6">
-      <div className="pointer-events-none absolute left-[-120px] top-40 h-72 w-72 rounded-full bg-accent/10 blur-[100px]" />
-      <div className="pointer-events-none absolute bottom-10 right-[-100px] h-80 w-80 rounded-full bg-champagne/15 blur-[110px]" />
+      <div className="pointer-events-none absolute -left-30 top-40 h-72 w-72 rounded-full bg-accent/10 blur-[100px]" />
+      <div className="pointer-events-none absolute bottom-10 -right-25 h-80 w-80 rounded-full bg-champagne/15 blur-[110px]" />
 
-      <div className="relative z-10 w-full max-w-md rounded-[32px] border border-border/70 bg-card px-7 py-10 shadow-[0_25px_100px_rgba(48,39,42,0.09)] sm:px-10">
+      <div className="relative z-10 w-full max-w-md rounded-4xl border border-border/70 bg-card px-7 py-10 shadow-[0_25px_100px_rgba(48,39,42,0.09)] sm:px-10">
         <div className="mb-7 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white">
           <Mail size={21} />
         </div>

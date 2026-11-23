@@ -3,7 +3,7 @@ export default function VendorDashboardSkeleton() {
     <div className="relative min-h-screen px-4 pb-16 pt-[168px] sm:px-6 lg:pl-[320px] lg:pr-8 lg:pt-32" aria-busy="true" aria-label="Loading vendor dashboard">
       <span className="sr-only">Loading vendor dashboard</span>
 
-      <div className="mx-auto max-w-[1400px]">
+      <div className="mx-auto max-w-350">
         <div className="mb-8">
           <div className="h-4 w-40 animate-pulse rounded bg-secondary" />
           <div className="mt-5 h-12 w-full max-w-lg animate-pulse rounded-xl bg-secondary" />

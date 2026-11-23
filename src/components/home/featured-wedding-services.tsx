@@ -28,7 +28,7 @@ export default async function FeaturedWeddingServices() {
       aria-labelledby="featured-services-heading"
       className="px-4 pb-12 pt-2 sm:px-6 md:pb-16 lg:px-10 lg:pb-20 lg:pt-4"
     >
-      <div className="mx-auto max-w-[1380px]">
+      <div className="mx-auto max-w-345">
         <FeaturedServicesHeader />
 
         {errorMessage ? (

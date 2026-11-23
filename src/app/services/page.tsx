@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   return (
     <main className="min-h-screen px-4 pb-20 pt-28 sm:px-6 sm:pt-32 lg:px-10">
-      <div className="mx-auto max-w-[1380px]">
+      <div className="mx-auto max-w-345">
         <Suspense fallback={<ServicesSkeleton />}>
           <BrowseServices />
         </Suspense>

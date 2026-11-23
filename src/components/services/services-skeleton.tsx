@@ -29,7 +29,7 @@ export default function ServicesSkeleton({
             key={index}
             className="overflow-hidden rounded-2xl border border-border/80 bg-card/70"
           >
-            <div className="aspect-[4/3] animate-pulse bg-secondary" />
+            <div className="aspect-4/3 animate-pulse bg-secondary" />
             <div className="space-y-3 p-6">
               <div className="h-5 w-3/4 animate-pulse rounded bg-secondary" />
               <div className="h-4 w-full animate-pulse rounded bg-secondary" />

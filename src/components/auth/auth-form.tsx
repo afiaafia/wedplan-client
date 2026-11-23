@@ -23,19 +23,19 @@ import { getSafeRedirectPath } from "@/lib/redirect-path";
 import {
   getSafePostAuthRedirect,
   isAllowedPostAuthDestination,
-  isServiceDetailPath,
 } from "@/lib/route-access";
 import {
   DEFAULT_ROLE,
-  getRoleDashboard,
-  getPrimaryRole,
   isRegistrationRole,
   normalizeRoles,
   REGISTRATION_ROLES,
-  USER_ROLES,
   type RegistrationRole,
   type UserRole,
 } from "@/lib/roles";
+import {
+  resolvePostAuthDestination,
+  setSessionActiveRole,
+} from "@/lib/active-role";
 import {
   finishGoogleOAuthFlow,
   startGoogleOAuthFlow,
@@ -89,21 +89,8 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
   const { showToast } = useToast();
   const isSignUp = mode === "sign-up";
   const isVendorSignIn = !isSignUp && audience === "vendor";
-  const returnPath = getSafeRedirectPath(
-    searchParams.get("callbackURL") ?? searchParams.get("redirect"),
-    typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-  );
-  const returnPathname = returnPath?.split(/[?#]/, 1)[0] ?? "";
-  const isServiceDetailReturn = isServiceDetailPath(returnPathname);
-  const allowedRoles: readonly UserRole[] | null = isSignUp
-    ? null
-    : isServiceDetailReturn
-      ? USER_ROLES
-      : audience === "vendor"
-        ? ["vendor"]
-        : ["customer"];
+  const allowedRoles: readonly UserRole[] | null =
+    !isSignUp && audience === "vendor" ? ["vendor"] : null;
 
   const roleParam = searchParams.get("role");
   const [role, setRole] = useState<RegistrationRole>(() =>
@@ -132,14 +119,29 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
   async function redirectAfterAuth() {
     const result = await getSession();
     const user = result.data?.user;
+    const sessionId = result.data?.session?.id;
     const userRoles = normalizeRoles(user?.roles, user?.role);
     const requestedRole = isSignUp
       ? role
-      : userRoles.includes("admin")
-        ? "admin"
-        : allowedRoles?.find((candidate) => userRoles.includes(candidate));
+      : isVendorSignIn
+        ? "vendor"
+        : undefined;
 
-    if (allowedRoles && !requestedRole) {
+    if (!user || !sessionId) {
+      setFormError("We could not verify your session. Please try again.");
+      showToast({
+        title: "Sign in failed",
+        description: "We could not verify your session. Please try again.",
+        variant: "error",
+      });
+      return;
+    }
+
+    if (
+      allowedRoles &&
+      !userRoles.some((candidate) => allowedRoles.includes(candidate)) &&
+      !userRoles.includes("admin")
+    ) {
       await signOut();
       setRoleMismatch(true);
       setFormError(
@@ -150,7 +152,6 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
       return;
     }
 
-    const activeRole = requestedRole ?? getPrimaryRole(user?.role, user?.roles);
     const requestedPath = getSafePostAuthRedirect(
       searchParams.get("callbackURL"),
       searchParams.get("redirect"),
@@ -159,7 +160,14 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
         : "http://localhost:3000",
       userRoles
     );
-    const target = requestedPath ?? getRoleDashboard(activeRole);
+    const destination = resolvePostAuthDestination(
+      userRoles,
+      requestedPath,
+      requestedRole
+    );
+    if (destination.activeRole) {
+      setSessionActiveRole(sessionId, destination.activeRole, userRoles);
+    }
 
     showToast({
       title: isSignUp ? "Account created" : "Signed in",
@@ -167,7 +175,7 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
       variant: "success",
     });
 
-    router.replace(target);
+    router.replace(destination.target);
     router.refresh();
   }
 
@@ -338,14 +346,14 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pb-12 pt-32 sm:px-6">
-      <div className="pointer-events-none absolute left-[-120px] top-40 h-72 w-72 rounded-full bg-accent/10 blur-[100px]" />
-      <div className="pointer-events-none absolute bottom-10 right-[-100px] h-80 w-80 rounded-full bg-champagne/15 blur-[110px]" />
+      <div className="pointer-events-none absolute -left-30 top-40 h-72 w-72 rounded-full bg-accent/10 blur-[100px]" />
+      <div className="pointer-events-none absolute bottom-10 -right-25 h-80 w-80 rounded-full bg-champagne/15 blur-[110px]" />
 
-      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[32px] border border-border/70 bg-card shadow-[0_25px_100px_rgba(48,39,42,0.09)] md:grid-cols-2">
-        <section className="relative hidden min-h-[640px] flex-col justify-between overflow-hidden bg-primary p-12 text-white md:flex">
+      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-4xl border border-border/70 bg-card shadow-[0_25px_100px_rgba(48,39,42,0.09)] md:grid-cols-2">
+        <section className="relative hidden min-h-160 flex-col justify-between overflow-hidden bg-primary p-12 text-white md:flex">
           <div className="absolute -right-28 -top-24 h-80 w-80 rounded-full border border-white/10" />
           <div className="absolute -right-12 -top-8 h-48 w-48 rounded-full border border-white/10" />
-          <div className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-white/[0.05]" />
+          <div className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-white/5" />
 
           <div className="relative">
             <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl">
@@ -384,7 +392,7 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
         </section>
 
         <section className="flex items-center justify-center px-6 py-12 sm:px-12 md:py-16">
-          <div className="w-full max-w-[390px]">
+          <div className="w-full max-w-97.5">
             <div className="mb-9 md:hidden">
               <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white">
                 <Heart size={22} />
