@@ -28,7 +28,9 @@ WedPlan is a role-aware wedding planning platform for couples, vendors, and admi
 
 ## Project preview
 
+## Preview
 
+![WedPlan Preview](docs/assets/preview.png)
 ---
 
 ## How WedPlan works
