@@ -26,7 +26,7 @@ export default async function VendorSignInPage() {
     if (disposition === "activate-vendor") {
       return <VendorAccessConfirmation source="account" />;
     }
-    redirect(getRoleDashboard(session.user.role));
+    redirect(getRoleDashboard(session.user.role, session.user.roles));
   }
 
   return <VendorSignInForm />;

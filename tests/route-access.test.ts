@@ -85,6 +85,22 @@ test("multi-role accounts can open both dashboards while single-role users stay 
   );
 });
 
+test("Admin post-auth redirects cannot fall through to Customer or Vendor dashboards", () => {
+  const roles = ["customer", "vendor", "admin"] as const;
+  assert.equal(
+    isAllowedPostAuthRedirectForRoles("/dashboard/admin", roles),
+    true
+  );
+  assert.equal(
+    isAllowedPostAuthRedirectForRoles("/dashboard/customer", roles),
+    false
+  );
+  assert.equal(
+    isAllowedPostAuthRedirectForRoles("/dashboard/vendor/bookings", roles),
+    false
+  );
+});
+
 test("unrelated or unsafe paths are not treated as service destinations", () => {
   assert.equal(isAllowedPostAuthRedirect("/services/one/two", "customer"), false);
   assert.equal(isAllowedPostAuthRedirect("//evil.example/services", "customer"), false);

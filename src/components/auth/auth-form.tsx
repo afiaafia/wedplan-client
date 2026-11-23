@@ -28,8 +28,8 @@ import {
 import {
   DEFAULT_ROLE,
   getRoleDashboard,
+  getPrimaryRole,
   isRegistrationRole,
-  normalizeRole,
   normalizeRoles,
   REGISTRATION_ROLES,
   USER_ROLES,
@@ -135,7 +135,9 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
     const userRoles = normalizeRoles(user?.roles, user?.role);
     const requestedRole = isSignUp
       ? role
-      : allowedRoles?.find((candidate) => userRoles.includes(candidate));
+      : userRoles.includes("admin")
+        ? "admin"
+        : allowedRoles?.find((candidate) => userRoles.includes(candidate));
 
     if (allowedRoles && !requestedRole) {
       await signOut();
@@ -148,7 +150,7 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
       return;
     }
 
-    const activeRole = requestedRole ?? normalizeRole(user?.role);
+    const activeRole = requestedRole ?? getPrimaryRole(user?.role, user?.roles);
     const requestedPath = getSafePostAuthRedirect(
       searchParams.get("callbackURL"),
       searchParams.get("redirect"),
@@ -303,7 +305,7 @@ export default function AuthForm({ mode, audience = "customer" }: AuthFormProps)
       const isVendorFlow = isVendorSignIn || (isSignUp && role === "vendor");
       const callbackPath = isVendorFlow
         ? `/vendor/auth/callback${destination ? `?redirect=${encodeURIComponent(destination)}` : ""}`
-        : destination ?? getRoleDashboard("customer");
+        : `/sign-in${destination ? `?callbackURL=${encodeURIComponent(destination)}` : ""}`;
       const requestedRole = isVendorFlow ? "vendor" : "customer";
 
       const result = await signIn.social({

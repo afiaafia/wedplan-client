@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerApiBaseUrl } from "@/lib/api-url";
 import {
   getRoleDashboard,
+  getPrimaryRole,
   normalizeRoles,
-  normalizeRole,
   type UserRole,
 } from "@/lib/roles";
 import {
@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
     ? normalizeRoles(session.user.roles, session.user.role)
     : [];
   const role: UserRole | null = session
-    ? normalizeRole(session.user.role)
+    ? getPrimaryRole(session.user.role, session.user.roles)
     : null;
   const roleDashboard = role ? getRoleDashboard(role) : null;
   const isBlocked = session?.user.isBlocked === true;
@@ -88,20 +88,24 @@ export async function proxy(request: NextRequest) {
   }
 
   const authDashboardRole =
-    pathname === "/vendor/sign-in" && roles.includes("vendor")
-      ? "vendor"
-      : role;
+    role === "admin"
+      ? "admin"
+      : pathname === "/vendor/sign-in" && roles.includes("vendor")
+        ? "vendor"
+        : role;
   const authDashboard = authDashboardRole
     ? getRoleDashboard(authDashboardRole)
     : null;
   const defaultAuthTarget =
-    pathname === "/sign-up" &&
-    request.nextUrl.searchParams.get("role") === "vendor" &&
-    roles.includes("customer")
-      ? roles.includes("vendor")
-        ? getRoleDashboard("vendor")
-        : "/vendor/onboarding"
-      : authDashboard;
+    role === "admin"
+      ? getRoleDashboard("admin")
+      : pathname === "/sign-up" &&
+          request.nextUrl.searchParams.get("role") === "vendor" &&
+          roles.includes("customer")
+        ? roles.includes("vendor")
+          ? getRoleDashboard("vendor")
+          : "/vendor/onboarding"
+        : authDashboard;
 
   if (isAuthPath && session && !isBlocked && defaultAuthTarget && authDashboardRole) {
     const requestedPath = getSafePostAuthRedirect(

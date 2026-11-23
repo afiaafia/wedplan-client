@@ -13,7 +13,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
-import { getRoleDashboard, hasRole, normalizeRole } from "@/lib/roles";
+import { getPrimaryRole, getRoleDashboard, hasRole } from "@/lib/roles";
 import { formatPrice, type ServiceDetail } from "@/lib/services-api";
 import type { BookingConfirmation as BookingConfirmationData } from "@/lib/bookings-api";
 import BookingConfirmation from "./booking-confirmation";
@@ -32,11 +32,7 @@ export default function BookingCard({ service }: { service: ServiceDetail }) {
   const canBookAsCustomer = user
     ? hasRole(user.roles, "customer", user.role)
     : false;
-  const role = user
-    ? canBookAsCustomer
-      ? "customer"
-      : normalizeRole(user.role)
-    : null;
+  const role = user ? getPrimaryRole(user.role, user.roles) : null;
   const isBlocked = user?.isBlocked === true;
   const canBook = canBookAsCustomer && !isBlocked;
 

@@ -14,7 +14,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import ThemeToggle from "./theme-toggle";
 import { useSession } from "@/lib/auth-client";
 import { useLogout } from "@/lib/use-logout";
-import { getRoleDashboard, normalizeRole, normalizeRoles } from "@/lib/roles";
+import {
+  getPrimaryRole,
+  getRoleDashboard,
+  normalizeRoles,
+} from "@/lib/roles";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -101,12 +105,13 @@ export default function Navbar() {
   }, [profileOpen]);
 
   const isAuthenticated = !!user;
-  const activeRole =
-    roles.find(
-      (role) =>
-        pathname === getRoleDashboard(role) ||
-        pathname.startsWith(`${getRoleDashboard(role)}/`)
-    ) ?? normalizeRole(user?.role);
+  const activeRole = roles.includes("admin")
+    ? "admin"
+    : roles.find(
+        (role) =>
+          pathname === getRoleDashboard(role) ||
+          pathname.startsWith(`${getRoleDashboard(role)}/`)
+      ) ?? getPrimaryRole(user?.role, roles);
   const dashboardHref = getRoleDashboard(activeRole);
 
   const initials =

@@ -28,7 +28,10 @@ export default async function SignInPage({
       process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
       normalizeRoles(session.user.roles, session.user.role)
     );
-    redirect(requestedPath ?? getRoleDashboard(session.user.role));
+    redirect(
+      requestedPath ??
+        getRoleDashboard(session.user.role, session.user.roles)
+    );
   }
 
   return <AuthForm mode="sign-in" />;

@@ -79,6 +79,17 @@ export function isAllowedPostAuthRedirectForRoles(
   roles: readonly UserRole[]
 ): boolean {
   const pathname = path.split(/[?#]/, 1)[0] ?? path;
+  const requestedDashboardRole = pathname.match(
+    /^\/dashboard\/(customer|vendor|admin)(?:\/|$)/
+  )?.[1];
+
+  if (
+    roles.includes("admin") &&
+    requestedDashboardRole !== undefined &&
+    requestedDashboardRole !== "admin"
+  ) {
+    return false;
+  }
 
   if (isProtectedAppPath(pathname)) {
     return isRouteAllowedForRoles(pathname, roles);

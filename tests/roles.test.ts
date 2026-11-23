@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   hasRole,
+  getPrimaryRole,
   getRoleDashboard,
   isRegistrationRole,
   normalizeRole,
@@ -42,6 +43,12 @@ test("each role maps to its own dashboard", () => {
   assert.equal(getRoleDashboard("customer"), "/dashboard/customer");
   assert.equal(getRoleDashboard("vendor"), "/dashboard/vendor");
   assert.equal(getRoleDashboard("admin"), "/dashboard/admin");
+});
+
+test("Admin has redirect priority when the account has multiple roles", () => {
+  const roles = ["customer", "vendor", "admin"];
+  assert.equal(getPrimaryRole("customer", roles), "admin");
+  assert.equal(getRoleDashboard("customer", roles), "/dashboard/admin");
 });
 
 test("unknown roles fall back to the customer dashboard", () => {

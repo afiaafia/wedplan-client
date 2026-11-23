@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { getServerApiBaseUrl } from "@/lib/api-url";
 import {
   getRoleDashboard,
-  normalizeRole,
   normalizeRoles,
   type UserRole,
 } from "@/lib/roles";
@@ -114,7 +113,7 @@ export async function requireRole(allowedRoles: readonly UserRole[]): Promise<{
   const role = allowedRoles.find((allowedRole) => roles.includes(allowedRole));
 
   if (!role) {
-    redirect(getRoleDashboard(normalizeRole(session.user.role)));
+    redirect(getRoleDashboard(session.user.role, session.user.roles));
   }
 
   return { session, user: session.user, role };

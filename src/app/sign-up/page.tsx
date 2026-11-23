@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function SignUpPage() {
   const session = await getServerSession();
   if (session) {
-    redirect(getRoleDashboard(session.user.role));
+    redirect(getRoleDashboard(session.user.role, session.user.roles));
   }
 
   return <AuthForm mode="sign-up" />;

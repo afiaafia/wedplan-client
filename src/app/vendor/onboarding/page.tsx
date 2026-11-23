@@ -14,12 +14,16 @@ export const metadata: Metadata = {
 export default async function VendorOnboardingPage() {
   const { user } = await requireSession("/vendor/onboarding");
 
+  if (hasRole(user.roles, "admin", user.role)) {
+    redirect(getRoleDashboard(user.role, user.roles));
+  }
+
   if (hasRole(user.roles, "vendor", user.role)) {
     redirect("/dashboard/vendor");
   }
 
   if (!hasRole(user.roles, "customer", user.role)) {
-    redirect(getRoleDashboard(user.role));
+    redirect(getRoleDashboard(user.role, user.roles));
   }
 
   return (

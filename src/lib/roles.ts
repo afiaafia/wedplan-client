@@ -44,8 +44,15 @@ export function hasRole(
   return normalizeRoles(roles, legacyRole).includes(role);
 }
 
-export function getRoleDashboard(value: unknown): string {
-  switch (normalizeRole(value)) {
+export function getPrimaryRole(role: unknown, roles?: unknown): UserRole {
+  const normalizedRoles = normalizeRoles(roles, role);
+  if (normalizedRoles.includes("admin")) return "admin";
+  if (normalizedRoles.includes("vendor")) return "vendor";
+  return "customer";
+}
+
+export function getRoleDashboard(role: unknown, roles?: unknown): string {
+  switch (getPrimaryRole(role, roles)) {
     case "vendor":
       return "/dashboard/vendor";
     case "admin":
