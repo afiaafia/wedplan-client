@@ -74,7 +74,7 @@ export default function WhyChooseWedPlan() {
   return (
     <section
       aria-labelledby="why-choose-heading"
-      className="px-4 py-20 sm:px-6 lg:px-10 lg:py-24"
+      className="px-4 py-12 sm:px-6 md:py-16 lg:px-10 lg:py-24"
     >
       <div className="mx-auto max-w-[1380px]">
         <motion.header
@@ -87,11 +87,11 @@ export default function WhyChooseWedPlan() {
           </p>
           <h2
             id="why-choose-heading"
-            className="mt-3 font-serif text-3xl leading-tight tracking-tight text-foreground sm:text-4xl"
+            className="mt-2 font-serif text-2xl leading-tight tracking-tight text-foreground lg:mt-3 lg:text-4xl"
           >
             Planning made simpler, from first idea to final detail
           </h2>
-          <p className="mt-3 text-sm leading-7 text-muted sm:text-base">
+          <p className="mt-2 text-sm leading-6 text-muted lg:mt-3 lg:text-base lg:leading-7">
             A calm, organized way to discover wedding services and keep your
             planning moving.
           </p>
@@ -100,7 +100,7 @@ export default function WhyChooseWedPlan() {
         <motion.div
           {...revealProps}
           variants={containerVariants}
-          className="mt-10 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5"
+          className="mt-7 grid grid-cols-2 gap-3 md:mt-9 md:gap-4 lg:mt-12 lg:grid-cols-3 lg:gap-5"
         >
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
@@ -109,26 +109,32 @@ export default function WhyChooseWedPlan() {
               <motion.article
                 key={benefit.title}
                 variants={itemVariants}
-                className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-[0_8px_30px_rgba(48,39,42,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_18px_45px_rgba(48,39,42,0.1)] motion-reduce:hover:translate-y-0 sm:p-7"
+                className="group relative overflow-hidden rounded-xl border border-border/80 bg-card p-3 shadow-[0_8px_30px_rgba(48,39,42,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_18px_45px_rgba(48,39,42,0.1)] motion-reduce:hover:translate-y-0 sm:rounded-2xl sm:p-4 lg:p-7"
               >
-                <span className="absolute right-5 top-4 font-serif text-4xl text-secondary sm:text-5xl">
+                <span className="absolute right-3 top-3 font-serif text-3xl text-secondary sm:right-4 sm:top-4 sm:text-4xl lg:right-5 lg:top-4 lg:text-5xl">
                   0{index + 1}
                 </span>
 
-                <span className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary transition-colors group-hover:bg-primary group-hover:text-white motion-reduce:transition-none">
-                  <Icon size={20} strokeWidth={1.7} aria-hidden="true" />
+                <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-primary transition-colors group-hover:bg-primary group-hover:text-white motion-reduce:transition-none sm:h-10 sm:w-10 sm:rounded-xl lg:h-11 lg:w-11">
+                  <Icon
+                    size={18}
+                    strokeWidth={1.7}
+                    aria-hidden="true"
+                    className="lg:h-5 lg:w-5"
+                  />
                 </span>
 
-                <h3 className="relative mt-5 font-serif text-lg leading-snug text-foreground sm:text-xl">
+                <h3 className="relative mt-3 font-serif text-base leading-snug text-foreground sm:mt-4 lg:mt-5 lg:text-xl">
                   {benefit.title}
                 </h3>
-                <p className="relative mt-2 text-sm leading-6 text-muted">
+                <p className="relative mt-1.5 text-xs leading-5 text-muted sm:text-[13px] lg:mt-2 lg:text-sm lg:leading-6">
                   {benefit.description}
                 </p>
               </motion.article>
             );
           })}
         </motion.div>
+
       </div>
     </section>
   );

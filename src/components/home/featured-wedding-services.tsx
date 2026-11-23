@@ -3,9 +3,9 @@ import { AlertCircle, ArrowRight, Sparkles } from "lucide-react";
 import {
   FEATURED_SERVICES_LIMIT,
   FEATURED_SERVICES_LIST_HREF,
-  getFeaturedServices,
   type FeaturedService,
 } from "@/lib/featured-services-api";
+import { getHomepageFeaturedServices } from "@/lib/homepage-featured-services";
 import FeaturedServiceCard from "./featured-service-card";
 import FeaturedServicesHeader from "./featured-services-header";
 
@@ -14,7 +14,7 @@ export default async function FeaturedWeddingServices() {
   let errorMessage: string | null = null;
 
   try {
-    const response = await getFeaturedServices(FEATURED_SERVICES_LIMIT);
+    const response = await getHomepageFeaturedServices();
     services = response.data.services.slice(0, FEATURED_SERVICES_LIMIT);
   } catch (error) {
     errorMessage =
@@ -26,7 +26,7 @@ export default async function FeaturedWeddingServices() {
   return (
     <section
       aria-labelledby="featured-services-heading"
-      className="px-4 pb-20 pt-4 sm:px-6 lg:px-10"
+      className="px-4 pb-12 pt-2 sm:px-6 md:pb-16 lg:px-10 lg:pb-20 lg:pt-4"
     >
       <div className="mx-auto max-w-[1380px]">
         <FeaturedServicesHeader />
@@ -34,7 +34,7 @@ export default async function FeaturedWeddingServices() {
         {errorMessage ? (
           <div
             role="alert"
-            className="rounded-2xl border border-error/30 bg-error/10 p-8 text-center"
+            className="rounded-2xl border border-error/30 bg-error/10 p-6 text-center lg:p-8"
           >
             <AlertCircle
               size={28}
@@ -56,7 +56,7 @@ export default async function FeaturedWeddingServices() {
             </Link>
           </div>
         ) : services.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card/60 p-10 text-center">
+          <div className="rounded-2xl border border-dashed border-border bg-card/60 p-6 text-center lg:p-10">
             <Sparkles
               size={28}
               strokeWidth={1.5}
@@ -79,7 +79,7 @@ export default async function FeaturedWeddingServices() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {services.map((service) => (
               <FeaturedServiceCard key={service.id} service={service} />
             ))}
